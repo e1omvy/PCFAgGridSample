@@ -4,6 +4,7 @@ type DataSet = ComponentFramework.PropertyTypes.DataSet;
 import * as React from "react";
 import * as ReactDOM from  "react-dom"
 import MyReactComponent from "./components/MyReactComponent";
+import GridExample from "./components/GridExample"
 
 export class PCFAGGRidComponent implements ComponentFramework.StandardControl<IInputs, IOutputs> {
 
@@ -45,7 +46,7 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
      */
     public updateView(context: ComponentFramework.Context<IInputs>): void
     {
-        // Add code to update control view
+        // Add code to update control views
         ReactDOM.render(
             React.createElement(MyReactComponent, {}), 
             this._container
