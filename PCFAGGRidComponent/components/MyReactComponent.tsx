@@ -194,9 +194,10 @@ const MyReactComponent: React.FC<IMyReactComponentProps> = (props) => {
         var parentItems = dataArr.filter(function (item) {
             return item.parent == null;
         });
+
+        var finalArr = [];
         for (let i = 0; i < parentItems.length; i++) {
             
-
         }
 
     }

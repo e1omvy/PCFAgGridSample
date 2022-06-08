@@ -32,7 +32,7 @@
     <resources>
       <code path="index.ts" order="1"/>
       <css path="../node_modules/ag-grid-community/dist/styles/ag-grid.css" order="1"/>
-      <css path="../node_modules/ag-grid-community/dist/styles/ag-theme-alpine.css" order="2"/>
+      <css path="../node_modules/ag-grid-community/dist/styles/ag-theme-alpine-dark.css" order="2"/>
       <!-- UNCOMMENT TO ADD MORE RESOURCES
       <css path="css/PCFAGGRidComponent.css" order="1" />
       <resx path="strings/PCFAGGRidComponent.1033.resx" version="1.0.0" />

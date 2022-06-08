@@ -5,6 +5,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom"
 import MyReactComponent from "./components/MyReactComponent";
 import GridExample from "./components/GridExample"
+import App from "./components/App";
 
 export class PCFAGGRidComponent implements ComponentFramework.StandardControl<IInputs, IOutputs> {
 
@@ -56,7 +57,8 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
       
         // Add code to update control views
         ReactDOM.render(
-            React.createElement(MyReactComponent, pageRows),
+            //React.createElement(MyReactComponent, pageRows),
+            React.createElement(App, {}),
             this._container
         );
     }
