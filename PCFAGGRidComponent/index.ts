@@ -28,15 +28,19 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
      */
     public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, state: ComponentFramework.Dictionary, container: HTMLDivElement): void {
         // Add control initialization code
+        let condition: any = {
+            attributeName: "new_parenttask",
+            conditionOperator: 0,
+            value: "NA",
+        };
+        let conditionsArray: any = [];
 
-        console.log(context.parameters.Orgs);
-
-        // const gridHTML = '<div id="autoCompleteCombo1"></div><table id="checkboxModeTreeGrid"></table><table id="customer"><tr><th>Company</th><th>Contact</th><th>Country</th></tr><tr><td>ABCD Corp</td><td>Manoj</td><td>USA</td></tr></table>'
-
-        // this.mainContainer = document.createElement("div");
-        // this.mainContainer.id = "GridContainer";
-        // this.mainContainer.innerHTML = gridHTML;
-        // container.appendChild(this.mainContainer);
+        conditionsArray.push(condition);
+        context.parameters.Projects.filtering.setFilter({
+            conditions: conditionsArray,
+            filterOperator: 0 /* or */,
+        });
+        context.parameters.Projects.refresh();
         this._container = container;
     }
 
@@ -46,19 +50,18 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
      * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
      */
     public updateView(context: ComponentFramework.Context<IInputs>): void {
-        console.log(context.parameters.Orgs);
-
-        let columnsOnView = context.parameters.Orgs.columns;
-        let mappedcolumns = this.mapCRMColumnsToDetailsListColmns(columnsOnView);
-        let pageRows = this.getAllPageRecords(columnsOnView, context.parameters.Orgs)
-
-        // console.log(pageRows);
-
+        console.log(context.parameters.Projects);
       
+        let columnsOnView = context.parameters.Projects.columns;
+        let mappedcolumns = this.mapCRMColumnsToDetailsListColmns(columnsOnView);
+        let pageRows = this.getAllPageRecords(columnsOnView, context.parameters.Projects);
+        console.log("pageRow in index ");
+        console.log(pageRows);
+
         // Add code to update control views
         ReactDOM.render(
             //React.createElement(MyReactComponent, pageRows),
-            React.createElement(App, {}),
+            React.createElement(App, context),
             this._container
         );
     }
@@ -82,8 +85,8 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
 
 
     public getAllPageRecords(columnsOnView: DataSetInterfaces.Column[],
-
         gridParam: DataSet) {
+
         let functionName = 'loadPagingRecords';
         let pagingDataRows: any = [];
         let currentPageRecordsID = gridParam.sortedRecordIds;

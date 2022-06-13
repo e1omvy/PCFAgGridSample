@@ -18,12 +18,13 @@
       -->
     </external-service-usage>
     <!-- dataset node represents a set of entity records on CDS; allow more than one datasets -->
-    <data-set name="Orgs" display-name-key="Dataset_Display_Key">
-       <property-set name="orgHierarchy" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" /> 
-       <property-set name="jobTitle" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" /> 
-       <property-set name="employeeType" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" /> 
-       <property-set name="ParentOrgHierarchy" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" /> 
-
+    <data-set name="Projects" display-name-key="Dataset_Display_Key">
+       <property-set name="Task Name" display-name-key="Property_Task_Name_Display_Key" description-key="Property_Task_Name_Desc_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
+       <property-set name="APILineStatus" display-name-key="Property_APILineStatus_Display_Key" description-key="Property_APILineStatus_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
+       <property-set name="Start Date" display-name-key="Property_StartDate_Display_Key" description-key="Property_StartDate_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
+       <property-set name="End Date" display-name-key="Property_EndDate_Display_Key" description-key="Property_EndDate_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
+       <property-set name="Percentage Complete" display-name-key="Property_Percentage_Complete_Display_Key" description-key="Property_Percentage_Complete_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
+       <property-set name="Parent Task" display-name-key="Property_Parent_Task_Display_Key" description-key="Property_Parent_Task_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
       <!-- 'property-set' node represents a unique, configurable property that each record in the dataset must provide. -->
       <!-- UNCOMMENT TO ADD PROPERTY-SET NODE
       <property-set name="samplePropertySet" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" />
