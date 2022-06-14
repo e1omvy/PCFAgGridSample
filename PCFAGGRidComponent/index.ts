@@ -6,11 +6,13 @@ import * as ReactDOM from "react-dom"
 import MyReactComponent from "./components/MyReactComponent";
 import GridExample from "./components/GridExample"
 import App from "./components/App";
+import { createRoot } from 'react-dom/client'
 
 export class PCFAGGRidComponent implements ComponentFramework.StandardControl<IInputs, IOutputs> {
 
     private mainContainer: HTMLDivElement;
     private _container: HTMLDivElement;
+    notifyChangeEvent: () => void;
     /**
      * Empty constructor.
      */
@@ -28,20 +30,9 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
      */
     public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, state: ComponentFramework.Dictionary, container: HTMLDivElement): void {
         // Add control initialization code
-        let condition: any = {
-            attributeName: "new_parenttask",
-            conditionOperator: 0,
-            value: "NA",
-        };
-        let conditionsArray: any = [];
 
-        conditionsArray.push(condition);
-        context.parameters.Projects.filtering.setFilter({
-            conditions: conditionsArray,
-            filterOperator: 0 /* or */,
-        });
-        context.parameters.Projects.refresh();
         this._container = container;
+        this.notifyChangeEvent = notifyOutputChanged;
     }
 
 
@@ -50,21 +41,49 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
      * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
      */
     public updateView(context: ComponentFramework.Context<IInputs>): void {
-        console.log(context.parameters.Projects);
-      
+        // console.log(context.parameters.Projects);
+
+        let condition: any = {
+            attributeName: "new_parenttask",
+            conditionOperator: 0,
+            value: "NA",
+        };
+        let conditionsArray: any = [];
+    
+        conditionsArray.push(condition);
+        context.parameters.Projects.filtering.setFilter({
+            conditions: conditionsArray,
+            filterOperator: 0 /* or */,
+        });
+        // context.parameters.Projects.refresh();
         let columnsOnView = context.parameters.Projects.columns;
         let mappedcolumns = this.mapCRMColumnsToDetailsListColmns(columnsOnView);
         let pageRows = this.getAllPageRecords(columnsOnView, context.parameters.Projects);
-        console.log("pageRow in index ");
+        console.log("pageRow in xxxx --------------------------------- ");
         console.log(pageRows);
 
+        let esignProp = {
+            onSelectionChange: (value: any) => {
+                this.notifyChangeEvent();
+            }
+        }
+
+        //@ts-ignore
+        //Xrm.Utility.alertDialog("ok");
+         
+      
         // Add code to update control views
         ReactDOM.render(
             //React.createElement(MyReactComponent, pageRows),
             React.createElement(App, context),
             this._container
         );
+
+
+
     }
+
+
 
     /**
      * It is called by the framework prior to a control receiving new data.
@@ -106,8 +125,6 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
         return pagingDataRows;
     }
 
-
-
     public mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
 
         let functionName = 'mapCRMColumnsToDetailsListColmns';
@@ -145,3 +162,7 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
 
     }
 }
+
+
+
+

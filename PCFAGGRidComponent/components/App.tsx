@@ -43,16 +43,17 @@ function createFakeServer(fakeServerData: any[]) {
                     return data.map(function (d) {
                         return {
                             group: !!d.children,
-                            employeeId: d.employeeId,
-                            employeeName: d.employeeName,
-                            employmentType: d.employmentType,
-                            jobTitle: d.jobTitle
+                            taskid: d.taskid,
+                            taskname: d.taskname,
+                            apilinestatus: d.apilinestatus,
+                            startdate: d.startdate,
+                            enddate: d.endate,
                         };
                     });
                 }
                 var key = groupKeys[0];
                 for (var i = 0; i < data.length; i++) {
-                    if (data[i].employeeId === key) {
+                    if (data[i].taskid === key) {
                         return extractRowsFromData(
                             groupKeys.slice(1),
                             data[i].children.slice()
@@ -68,7 +69,6 @@ function createFakeServer(fakeServerData: any[]) {
 
 function createServerSideDatasource(fakeServer: any) {
     console.log("createServerSideDatasource");
-
 
     const dataSource: IServerSideDatasource = {
         getRows: (params: IServerSideGetRowsParams) => {
@@ -86,11 +86,11 @@ function createServerSideDatasource(fakeServer: any) {
             setTimeout(function () {
                 params.success(result);
             }, 200);
+
         }
     };
     return dataSource;
 }
-
 
 function getAllPageRecords(columnsOnView: DataSetInterfaces.Column[],
     gridParam: DataSet) {
@@ -113,8 +113,6 @@ function getAllPageRecords(columnsOnView: DataSetInterfaces.Column[],
     }
     return pagingDataRows;
 }
-
-
 
 function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
 
@@ -154,15 +152,22 @@ function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
 }
 
 
+
 export default function App(context: ComponentFramework.Context<IInputs>) {
+    // context.factory.requestRender();
+
     const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
     const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
 
     const [columnDefs, setcolumnDefs] = useState<ColDef[]>([
-        { field: "employeeId", hide: true },
-        { field: "employeeName", hide: true },
-        { field: "jobTitle" },
-        { field: "employmentType" }
+        { field: "taskid", hide: true },
+        { field: "taskname", hide: true },
+        { field: "apilinestatus" },
+        { field: "startdate" },
+        { field: "enddate" },
+        { field: "percentagecomplete" },
+
+        //{ field: "employmentType" }
     ]);
 
     const defaultColDef = useMemo<ColDef>(() => {
@@ -175,11 +180,11 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     const autoGroupColumnDef = useMemo<ColDef>(() => {
         return {
-            field: "employeeName",
+            field: "taskname",
             cellRendererParams: {
                 innerRenderer: (params: ICellRendererParams) => {
                     // display employeeName rather than group key (employeeId)
-                    return params.data.employeeName;
+                    return params.data.taskname;
                 }
             }
         };
@@ -199,46 +204,77 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }, []);
     const getServerSideGroupKey = useCallback((dataItem: any) => {
         // specify which group key to use
-        return dataItem.employeeId;
+        return dataItem.taskid;
     }, []);
 
     const onGridReady = useCallback((params: GridReadyEvent) => {
         console.log("onGridReady");
+        // context.factory.requestRender();
 
+        // var Entity = "new_projects";
+        // var Id = "b70e65b5-eadd-ec11-bb3f-000d3af27212";
+        // var Select = "?$select=new_taskname";
+        // //@ts-ignore
+        // Xrm.WebApi.retrieveRecord(Entity,  Select).then(
+        //     function success(result: any) {
+        //         console.log("Success: " + result.name);
+        //     },
+        //     function (error: any) {
+        //         console.log(error.message);
+        //     }
+        // );
+        //@ts-ignore
+        console.log(Xrm.Utility.getGlobalContext());
 
-        let condition: any = {
-            attributeName: "new_parenttask",
-            conditionOperator: 0,
-            value: "Task 1",
-        };
-        let conditionsArray: any = [];
-
-        conditionsArray.push(condition);
-        context.parameters.Projects.filtering.setFilter({
-            conditions: conditionsArray,
-            filterOperator: 0 /* or */,
-        });
-        context.parameters.Projects.refresh();
-
-        let columnsOnView = context.parameters.Projects.columns;
-        let mappedcolumns = mapCRMColumnsToDetailsListColmns(columnsOnView);
-        let pageRows = getAllPageRecords(columnsOnView, context.parameters.Projects);
-        console.log("pageRow in App ");
-        console.log(pageRows);
-
-
-        fetch("https://www.ag-grid.com/example-assets/small-tree-data.json")
+        fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq 'NA'")
             .then((resp) => resp.json())
             .then((data: any[]) => {
                 console.log("---------------------------");
                 console.log(data);
-                var fakeServer = createFakeServer(data);
+                const nodes = createNodes(data);
+                console.log(nodes);
+                var fakeServer = createFakeServer(nodes);
                 var datasource = createServerSideDatasource(fakeServer);
                 console.log(fakeServer);
                 console.log(datasource);
                 params.api!.setServerSideDatasource(datasource);
 
             });
+
+        // fetch("https://www.ag-grid.com/example-assets/small-tree-data.json")
+        //     .then((resp) => resp.json())
+        //     .then((data: any[]) => {
+        //         console.log("---------------------------");
+        //         console.log(data);
+        //         data = [{
+        //             "taskid": 101,
+        //             "taskname": "111",
+        //             "startdate": "aaa",
+        //             "children": [{
+        //                 "taskid": 102,
+        //                 "taskname": "222",
+        //                 "startdate": "bbb",
+        //                 "children": [{
+        //                     "taskid": 103,
+        //                     "taskname": "1212",
+        //                     "startdate": "ccc",
+        //                     "children": [{
+        //                         "taskid": 104,
+        //                         "taskname": "55",
+        //                         "startdate": "ddd"
+        //                     }]
+        //                 }]
+        //             }]
+
+        //         }];
+
+        //         // var fakeServer = createFakeServer(data);
+        //         // var datasource = createServerSideDatasource(fakeServer);
+        //         // console.log(fakeServer);
+        //         // console.log(datasource);
+        //         // params.api!.setServerSideDatasource(datasource);
+
+        //     });
 
     }, []);
 
@@ -265,11 +301,32 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     isServerSideGroup={isServerSideGroup}
                     getServerSideGroupKey={getServerSideGroupKey}
                     onGridReady={onGridReady}
-                    groupDefaultExpanded={1}
+                    groupDefaultExpanded={0}
                 ></AgGridReact>
             </div>
         </div>
     );
 }
 
+
+
+
+function createNodes(data: any) {
+    let dtemp = [];
+    let d = data.value;
+    for (let i = 0; i < d.length; i++) {
+        dtemp.push({
+            "taskname": d[i].new_taskname,
+            "taskid": d[i].new_taskid,
+            "apilinestatus": d[i].new_apilinestatus,
+            "startdate": d[i].new_startdate,
+            "enddate": d[i].new_enddate,
+            "percentagecomplete": d[i].new_percentagecomplete,
+            "children": [
+            ]
+        });
+    }
+    console.log(dtemp);
+    return dtemp;
+}
 
