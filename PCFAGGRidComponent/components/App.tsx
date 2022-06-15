@@ -29,70 +29,6 @@ ModuleRegistry.registerModules([
     ColumnsToolPanelModule
 ]);
 
-function createFakeServer(fakeServerData: any[]) {
-
-    console.log("createFakeServer");
-    const fakeServer = {
-        data: fakeServerData,
-        getData: function (request: IServerSideGetRowsRequest) {
-            const extractRowsFromData: (groupKeys: string[], data: any[]) => any = (
-                groupKeys: string[],
-                data: any[]
-            ) => {
-                if (groupKeys.length === 0) {
-                    return data.map(function (d) {
-                        return {
-                            group: !!d.children,
-                            taskid: d.taskid,
-                            taskname: d.taskname,
-                            apilinestatus: d.apilinestatus,
-                            startdate: d.startdate,
-                            enddate: d.endate,
-                        };
-                    });
-                }
-                var key = groupKeys[0];
-                for (var i = 0; i < data.length; i++) {
-                    if (data[i].taskid === key) {
-                        return extractRowsFromData(
-                            groupKeys.slice(1),
-                            data[i].children.slice()
-                        );
-                    }
-                }
-            };
-            return extractRowsFromData(request.groupKeys, this.data);
-        }
-    };
-    return fakeServer;
-}
-
-
-function createServerSideDatasourceOld(fakeServer: any) {
-    console.log("createServerSideDatasource");
-
-    const dataSource: IServerSideDatasource = {
-        getRows: (params: IServerSideGetRowsParams) => {
-            console.log("ServerSideDatasource.getRows: params = ", params);
-            var allRows = fakeServer.getData(params.request);
-            var request = params.request;
-            var doingInfinite = request.startRow != null && request.endRow != null;
-            var result = doingInfinite
-                ? {
-                    rowData: allRows.slice(request.startRow, request.endRow),
-                    rowCount: allRows.length
-                }
-                : { rowData: allRows };
-            console.log("getRows: result = ", result);
-            setTimeout(function () {
-                params.success(result);
-            }, 200);
-
-        }
-    };
-    return dataSource;
-}
-
 function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
 
     const extractRowsFromData: (groupKeys: string[], data: any[]) => any = (
@@ -224,7 +160,6 @@ function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
 }
 
 
-
 export default function App(context: ComponentFramework.Context<IInputs>) {
     // context.factory.requestRender();
 
@@ -281,20 +216,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     const onGridReady = useCallback((params: GridReadyEvent) => {
         console.log("onGridReady");
-        // context.factory.requestRender();
-
-        // var Entity = "new_projects";
-        // var Id = "b70e65b5-eadd-ec11-bb3f-000d3af27212";
-        // var Select = "?$select=new_taskname";
-        // //@ts-ignore
-        // Xrm.WebApi.retrieveRecord(Entity,  Select).then(
-        //     function success(result: any) {
-        //         console.log("Success: " + result.name);
-        //     },
-        //     function (error: any) {
-        //         console.log(error.message);
-        //     }
-        // );
+       
         //@ts-ignore
         console.log(Xrm.Utility.getGlobalContext());
 
@@ -310,51 +232,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 //console.log(fakeServer);
                 console.log(datasource);
                 params.api!.setServerSideDatasource(datasource);
-
             });
-
-        // fetch("https://www.ag-grid.com/example-assets/small-tree-data.json")
-        //     .then((resp) => resp.json())
-        //     .then((data: any[]) => {
-        //         console.log("---------------------------");
-        //         console.log(data);
-        //         data = [{
-        //             "taskid": 101,
-        //             "taskname": "111",
-        //             "startdate": "aaa",
-        //             "children": [{
-        //                 "taskid": 102,
-        //                 "taskname": "222",
-        //                 "startdate": "bbb",
-        //                 "children": [{
-        //                     "taskid": 103,
-        //                     "taskname": "1212",
-        //                     "startdate": "ccc",
-        //                     "children": [{
-        //                         "taskid": 104,
-        //                         "taskname": "55",
-        //                         "startdate": "ddd"
-        //                     }]
-        //                 }]
-        //             }]
-
-        //         }];
-
-        //         // var fakeServer = createFakeServer(data);
-        //         // var datasource = createServerSideDatasource(fakeServer);
-        //         // console.log(fakeServer);
-        //         // console.log(datasource);
-        //         // params.api!.setServerSideDatasource(datasource);
-
-        //     });
-
     }, []);
 
     useEffect(() => {
         // Update the document title using the browser API
     });
-
-
 
 
     return (
