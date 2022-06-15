@@ -75,7 +75,7 @@ function createServerSideDatasource() {
                 filter = params.request.groupKeys[params.request.groupKeys.length - 1];
             }
 
-            fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq '" + filter + "'")
+            fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/crfb2_projectses?$select=crfb2_taskname,crfb2_percentagecomplete,crfb2_taskid,crfb2_apilinestatus,crfb2_startdate,crfb2_enddate&$filter=crfb2_parenttask eq '" + filter + "'")
                 .then((resp) => resp.json())
                 .then((data: any[]) => {
                     console.log("---------------------------");
@@ -220,7 +220,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         //@ts-ignore
         console.log(Xrm.Utility.getGlobalContext());
 
-        fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq 'NA'")
+        fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/crfb2_projectses?$select=crfb2_taskname,crfb2_percentagecomplete,crfb2_taskid,crfb2_apilinestatus,crfb2_startdate,crfb2_enddate&$filter=crfb2_parenttask eq 'NA'")
             .then((resp) => resp.json())
             .then((data: any[]) => {
                 console.log("---------------------------");
@@ -271,12 +271,12 @@ function createNodes(data: any) {
     let d = data.value;
     for (let i = 0; i < d.length; i++) {
         dtemp.push({
-            "taskname": d[i].new_taskname,
-            "taskid": d[i].new_taskid,
-            "apilinestatus": d[i].new_apilinestatus,
-            "startdate": d[i].new_startdate,
-            "enddate": d[i].new_enddate,
-            "percentagecomplete": d[i].new_percentagecomplete,
+            "taskname": d[i].crfb2_taskname,
+            "taskid": d[i].crfb2_taskid,
+            "apilinestatus": d[i].crfb2_apilinestatus,
+            "startdate": d[i].crfb2_startdate,
+            "enddate": d[i].crfb2_enddate,
+            "percentagecomplete": d[i].crfb2_percentagecomplete,
             "children": [
             ]
         });
