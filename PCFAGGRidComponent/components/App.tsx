@@ -67,7 +67,8 @@ function createFakeServer(fakeServerData: any[]) {
     return fakeServer;
 }
 
-function createServerSideDatasource(fakeServer: any) {
+
+function createServerSideDatasourceOld(fakeServer: any) {
     console.log("createServerSideDatasource");
 
     const dataSource: IServerSideDatasource = {
@@ -87,6 +88,77 @@ function createServerSideDatasource(fakeServer: any) {
                 params.success(result);
             }, 200);
 
+        }
+    };
+    return dataSource;
+}
+
+function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
+
+    const extractRowsFromData: (groupKeys: string[], data: any[]) => any = (
+        groupKeys: string[],
+        data: any[]
+    ) => {
+        // if (groupKeys.length === 0) {
+        return data.map(function (d) {
+            return {
+                group: !!d.children,
+                taskid: d.taskid,
+                taskname: d.taskname,
+                apilinestatus: d.apilinestatus,
+                startdate: d.startdate,
+                enddate: d.endate,
+            };
+        });
+        //}
+        var key = groupKeys[0];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].taskid === key) {
+                return extractRowsFromData(
+                    groupKeys.slice(1),
+                    data[i].children.slice()
+                );
+            }
+        }
+    };
+    return extractRowsFromData(request.groupKeys, data);
+}
+
+function createServerSideDatasource() {
+    console.log("createServerSideDatasource");
+
+    const dataSource: IServerSideDatasource = {
+        getRows: (params: IServerSideGetRowsParams) => {
+            console.log("ServerSideDatasource.getRows: params = ", params);
+
+            var filter = '';//params.request.groupKeys[0];
+            if (params.request.groupKeys.length == 0) {
+                filter = 'NA';
+            }
+            else {
+                filter = params.request.groupKeys[params.request.groupKeys.length - 1];
+            }
+
+            fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq '" + filter + "'")
+                .then((resp) => resp.json())
+                .then((data: any[]) => {
+                    console.log("---------------------------");
+                    console.log(data);
+                    var allRows = getNodes(params.request, createNodes(data));
+                    //  var result = allRows;
+                    var request = params.request;
+                    var doingInfinite = request.startRow != null && request.endRow != null;
+                    var result = doingInfinite
+                        ? {
+                            rowData: allRows, //allRows.slice(request.startRow, request.endRow),
+                            rowCount: allRows.length
+                        }
+                        : { rowData: allRows };
+                    console.log("getRows: result = ", result);
+                    setTimeout(function () {
+                        params.success(result);
+                    }, 200);
+                });
         }
     };
     return dataSource;
@@ -233,9 +305,9 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 console.log(data);
                 const nodes = createNodes(data);
                 console.log(nodes);
-                var fakeServer = createFakeServer(nodes);
-                var datasource = createServerSideDatasource(fakeServer);
-                console.log(fakeServer);
+                //var fakeServer = createFakeServer(nodes);
+                var datasource = createServerSideDatasource();
+                //console.log(fakeServer);
                 console.log(datasource);
                 params.api!.setServerSideDatasource(datasource);
 
@@ -301,7 +373,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     isServerSideGroup={isServerSideGroup}
                     getServerSideGroupKey={getServerSideGroupKey}
                     onGridReady={onGridReady}
-                    groupDefaultExpanded={0}
+                    groupDefaultExpanded={-1}
                 ></AgGridReact>
             </div>
         </div>
