@@ -27,7 +27,7 @@ import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 
 import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
-import { TextField } from "office-ui-fabric-react";
+import { StackItem, TextField } from "office-ui-fabric-react";
 
 
 // Register the required feature modules with the Grid
@@ -259,9 +259,73 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         // Update the document title using the browser API
     });
 
+    function BatchPostAccounts() {
+        this.apiUrl = Xrm.Utility.getGlobalContext().getClientUrl() + 
+            "/api/data/v9.1/";
+        this.uniqueId = "batch_" + (new Date().getTime());
+        this.batchItemHeader = "--" + 
+            this.uniqueId + 
+            "\nContent-Type: application/http\nContent-Transfer-Encoding:binary";
+        this.content = [];
+    }
+        
+    
+    BatchPostAccounts.prototype.addRequestItem = function(entity) {
+        this.content.push(this.batchItemHeader);
+        this.content.push("");
+        this.content.push("POST " + this.apiUrl + "accounts" + " HTTP/1.1");
+        this.content.push("Content-Type: application/json;type=entry");
+        this.content.push("");
+        this.content.push(JSON.stringify(entity));
+    }
+        
+    
+    BatchPostAccounts.prototype.sendRequest = function() {
+        this.content.push("");
+        this.content.push("--" + this.uniqueId + "--");
+        this.content.push(" ");
+    
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", encodeURI(this.apiUrl + "$batch"));
+        xhr.setRequestHeader("Content-Type", "multipart/mixed;boundary=" + 
+            this.uniqueId);
+        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("OData-MaxVersion", "4.0");
+        xhr.setRequestHeader("OData-Version", "4.0");
+        xhr.addEventListener("load", 
+            function() { 
+                console.log("Batch request response code: " + xhr.status); 
+            });
+        
+        xhr.send(this.content.join("\n"));
+    }
+
     function updateEntity() {
         console.log("Update -------------------");
+        // const requestOptions = {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({
+        //         "@odata.type": "Microsoft.Dynamics.CRM.contact",
+        //         "new_apilinestatus": "Updated",
+        //     })
+        // };
+        // fetch('https://reqres.in/api/posts', requestOptions)
+        //     .then(response => response.json())
+        //     .then(data => { console.log(data) });
 
+        var firstAccount = {
+            new_apilinestatus: "Test Account 1"
+        }
+
+        var secondAccount = {
+            new_apilinestatus: "Test Account 2"
+        }
+
+        var batchRequest = new BatchPostAccounts();
+        batchRequest.addRequestItem(firstAccount);
+        batchRequest.addRequestItem(secondAccount);   
+        batchRequest.sendRequest();
 
     }
 
@@ -301,10 +365,15 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 // You MUST provide this prop! Otherwise screen readers will just say "button" with no label.
                 closeButtonAriaLabel="Close"
             >
-                <TextField label="AP line Staus" />
+                <StackItem>
+                    <TextField label="AP line Staus" />
+                </StackItem>
+                <StackItem>
+                    <PrimaryButton onClick={updateEntity} text="Save" />
+                    <DefaultButton onClick={dismissPanel} text="Cancel" />
+                </StackItem>
 
-                <PrimaryButton onClick={updateEntity} text="Save" />
-                <DefaultButton onClick={dismissPanel} text="Cancel" />
+
             </Panel>
 
 
@@ -334,5 +403,4 @@ function createNodes(data: any) {
     console.log(dtemp);
     return dtemp;
 }
-
-
+ 
