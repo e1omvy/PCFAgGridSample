@@ -21,6 +21,15 @@ import { RowGroupingModule } from "@ag-grid-enterprise/row-grouping";
 import { MenuModule } from "@ag-grid-enterprise/menu";
 import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
 
+
+
+import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
+
+import { useBoolean } from '@fluentui/react-hooks';
+import { Dialog } from "@fluentui/react/lib/Dialog"
+import { DialogFooter } from "@fluentui/react/lib/Dialog";
+import { DialogContent, TextField } from "office-ui-fabric-react";
+
 // Register the required feature modules with the Grid
 ModuleRegistry.registerModules([
     ServerSideRowModelModule,
@@ -43,7 +52,7 @@ function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
                 taskname: d.taskname,
                 apilinestatus: d.apilinestatus,
                 startdate: d.startdate,
-                enddate: d.endate,
+                enddate: d.enddate,
             };
         });
         //}
@@ -75,7 +84,7 @@ function createServerSideDatasource() {
                 filter = params.request.groupKeys[params.request.groupKeys.length - 1];
             }
 
-            fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/crfb2_projectses?$select=crfb2_taskname,crfb2_percentagecomplete,crfb2_taskid,crfb2_apilinestatus,crfb2_startdate,crfb2_enddate&$filter=crfb2_parenttask eq '" + filter + "'")
+            fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq '" + filter + "'")
                 .then((resp) => resp.json())
                 .then((data: any[]) => {
                     console.log("---------------------------");
@@ -159,17 +168,32 @@ function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
 
 }
 
+const modelProps = {
+    isBlocking: false,
+    styles: { main: { maxWidth: 450 } },
+};
+const dialogContentProps = {
+    //  type: DialogType.largeHeader,
+    title: 'Update Records',
+    subText: '',
+};
 
 export default function App(context: ComponentFramework.Context<IInputs>) {
     // context.factory.requestRender();
+
+
+    // Dialog start 
+    const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(true);
+
+    // dialog end 
 
     const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
     const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
 
     const [columnDefs, setcolumnDefs] = useState<ColDef[]>([
         { field: "taskid", hide: true },
-        { field: "taskname", hide: true },
-        { field: "apilinestatus" },
+        { field: "taskname", hide: true, checkboxSelection: true, },
+        { field: "apilinestatus", headerName: 'AP Line Status' },
         { field: "startdate" },
         { field: "enddate" },
         { field: "percentagecomplete" },
@@ -181,7 +205,9 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         return {
             width: 240,
             filter: "agTextColumnFilter",
-            flex: 1
+            flex: 1,
+            sortable: true,
+            resizable: true,
         };
     }, []);
 
@@ -192,7 +218,9 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 innerRenderer: (params: ICellRendererParams) => {
                     // display employeeName rather than group key (employeeId)
                     return params.data.taskname;
-                }
+                },
+                suppressCount: true,
+                checkbox: true,
             }
         };
     }, []);
@@ -216,11 +244,11 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     const onGridReady = useCallback((params: GridReadyEvent) => {
         console.log("onGridReady");
-       
+
         //@ts-ignore
         console.log(Xrm.Utility.getGlobalContext());
 
-        fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/crfb2_projectses?$select=crfb2_taskname,crfb2_percentagecomplete,crfb2_taskid,crfb2_apilinestatus,crfb2_startdate,crfb2_enddate&$filter=crfb2_parenttask eq 'NA'")
+        fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq 'NA'")
             .then((resp) => resp.json())
             .then((data: any[]) => {
                 console.log("---------------------------");
@@ -239,9 +267,20 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         // Update the document title using the browser API
     });
 
+    function updateEntity() {
+        console.log("Update -------------------");
+
+
+    }
+
 
     return (
+
         <div style={containerStyle}>
+
+            <DefaultButton secondaryText="" onClick={toggleHideDialog} text="Update Record(s)" />
+
+            <br />
             <div style={gridStyle} className="ag-theme-alpine-dark">
 
                 <AgGridReact
@@ -251,6 +290,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     rowModelType={"serverSide"}
                     serverSideStoreType={"partial"}
                     treeData={true}
+                    rowSelection={"multiple"}
                     animateRows={true}
                     isServerSideGroupOpenByDefault={isServerSideGroupOpenByDefault}
                     isServerSideGroup={isServerSideGroup}
@@ -258,7 +298,29 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     onGridReady={onGridReady}
                     groupDefaultExpanded={-1}
                 ></AgGridReact>
+
+
             </div>
+
+            <Dialog
+                hidden={hideDialog}
+                onDismiss={toggleHideDialog}
+                dialogContentProps={dialogContentProps}
+                modalProps={modelProps}
+            >
+                <DialogContent>
+                    <TextField label="AP Line Status" />
+
+                </DialogContent>
+
+                <DialogFooter>
+                    <PrimaryButton onClick={updateEntity} text="Save" />
+                    <DefaultButton onClick={toggleHideDialog} text="Cancel" />
+                </DialogFooter>
+            </Dialog>
+
+
+
         </div>
     );
 }
@@ -271,12 +333,12 @@ function createNodes(data: any) {
     let d = data.value;
     for (let i = 0; i < d.length; i++) {
         dtemp.push({
-            "taskname": d[i].crfb2_taskname,
-            "taskid": d[i].crfb2_taskid,
-            "apilinestatus": d[i].crfb2_apilinestatus,
-            "startdate": d[i].crfb2_startdate,
-            "enddate": d[i].crfb2_enddate,
-            "percentagecomplete": d[i].crfb2_percentagecomplete,
+            "taskname": d[i].new_taskname,
+            "taskid": d[i].new_taskid,
+            "apilinestatus": d[i].new_apilinestatus,
+            "startdate": d[i].new_startdate,
+            "enddate": d[i].new_enddate,
+            "percentagecomplete": d[i].new_percentagecomplete,
             "children": [
             ]
         });
@@ -284,4 +346,5 @@ function createNodes(data: any) {
     console.log(dtemp);
     return dtemp;
 }
+
 
