@@ -25,10 +25,10 @@ import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
 
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 
+import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
-import { Dialog } from "@fluentui/react/lib/Dialog"
-import { DialogFooter } from "@fluentui/react/lib/Dialog";
-import { DialogContent, TextField } from "office-ui-fabric-react";
+import { TextField } from "office-ui-fabric-react";
+
 
 // Register the required feature modules with the Grid
 ModuleRegistry.registerModules([
@@ -168,22 +168,14 @@ function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
 
 }
 
-const modelProps = {
-    isBlocking: false,
-    styles: { main: { maxWidth: 450 } },
-};
-const dialogContentProps = {
-    //  type: DialogType.largeHeader,
-    title: 'Update Records',
-    subText: '',
-};
 
 export default function App(context: ComponentFramework.Context<IInputs>) {
     // context.factory.requestRender();
 
 
     // Dialog start 
-    const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(true);
+    const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
+
 
     // dialog end 
 
@@ -278,7 +270,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
         <div style={containerStyle}>
 
-            <DefaultButton secondaryText="" onClick={toggleHideDialog} text="Update Record(s)" />
+            <DefaultButton secondaryText="" onClick={openPanel} text="Update Record(s)" />
 
             <br />
             <div style={gridStyle} className="ag-theme-alpine-dark">
@@ -302,22 +294,18 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
             </div>
 
-            <Dialog
-                hidden={hideDialog}
-                onDismiss={toggleHideDialog}
-                dialogContentProps={dialogContentProps}
-                modalProps={modelProps}
+            <Panel
+                headerText="Update records"
+                isOpen={isOpen}
+                onDismiss={dismissPanel}
+                // You MUST provide this prop! Otherwise screen readers will just say "button" with no label.
+                closeButtonAriaLabel="Close"
             >
-                <DialogContent>
-                    <TextField label="AP Line Status" />
+                <TextField label="AP line Staus" />
 
-                </DialogContent>
-
-                <DialogFooter>
-                    <PrimaryButton onClick={updateEntity} text="Save" />
-                    <DefaultButton onClick={toggleHideDialog} text="Cancel" />
-                </DialogFooter>
-            </Dialog>
+                <PrimaryButton onClick={updateEntity} text="Save" />
+                <DefaultButton onClick={dismissPanel} text="Cancel" />
+            </Panel>
 
 
 
