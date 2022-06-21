@@ -183,6 +183,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
 
     const [aplineStatus, setAplineStatus] = useState('');
+    const [activeUpdateButton, setActiveUpdateButton] = useState(true);
 
     const gridRef = React.useRef<AgGridReact>(null);
     const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
@@ -263,6 +264,16 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }, []);
 
 
+    function onSelectionChanged(){
+        console.log(gridRef.current!.api.getSelectedRows());
+        let count = gridRef.current!.api.getSelectedRows().length;
+        if (count > 0){
+            setActiveUpdateButton(false);
+        }
+        else{
+            setActiveUpdateButton(true);
+        }
+    }
 
 
     useEffect(() => {
@@ -400,7 +411,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
         <div style={containerStyle}>
 
-            <DefaultButton secondaryText="" onClick={openPanel} text="Update Record(s)" />
+            <DefaultButton secondaryText="" onClick={openPanel} text="Update Record(s)" disabled={activeUpdateButton} />
 
             <br /> <br />
             <div style={gridStyle} className="ag-theme-alpine-dark">
@@ -420,7 +431,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     getServerSideGroupKey={getServerSideGroupKey}
                     onGridReady={onGridReady}
                     groupDefaultExpanded={-1}
-
+                    onSelectionChanged = {onSelectionChanged}
                 ></AgGridReact>
 
 
