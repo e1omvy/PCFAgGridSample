@@ -4,8 +4,7 @@ import { IInputs, IOutputs } from "../generated/ManifestTypes"
 import { AgGridReact } from "@ag-grid-community/react";
 import DataSetInterfaces = ComponentFramework.PropertyHelper.DataSetApi;
 type DataSet = ComponentFramework.PropertyTypes.DataSet;
-// import "@ag-grid-community/core/dist/styles/ag-grid.css";
-// import "@ag-grid-community/core/dist/styles/ag-theme-alpine-dark.css";
+
 import {
     ColDef,
     GridReadyEvent,
@@ -28,6 +27,7 @@ import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
 import { IStackProps, IStackStyles, Stack, StackItem, TextField } from "office-ui-fabric-react";
+import { appConfig } from "./constants";
 
 
 // Register the required feature modules with the Grid
@@ -85,7 +85,8 @@ function createServerSideDatasource() {
                 filter = params.request.groupKeys[params.request.groupKeys.length - 1];
             }
 
-            fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_projectsid,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq '" + filter + "'")
+            //@ts-ignore
+            fetch(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter + "'")
                 .then((resp) => resp.json())
                 .then((data: any[]) => {
                     console.log("---------------------------");
@@ -178,7 +179,7 @@ const columnProps: Partial<IStackProps> = {
 
 
 export default function App(context: ComponentFramework.Context<IInputs>) {
-    // context.factory.requestRender();
+
     // Panel open  
     const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
 
@@ -197,8 +198,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "startdate" },
         { field: "enddate" },
         { field: "percentagecomplete" },
-
-        //{ field: "employmentType" }
     ]);
 
     const defaultColDef = useMemo<ColDef>(() => {
@@ -247,17 +246,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
         //@ts-ignore
         console.log(Xrm.Utility.getGlobalContext());
-
-        fetch("https://org5a3fbf2f.crm8.dynamics.com/api/data/v9.0/new_projectses?$select=new_taskname,new_projectsid,new_percentagecomplete,new_taskid,new_apilinestatus,new_startdate,new_enddate&$filter=new_parenttask eq 'NA'")
+        //@ts-ignore
+        fetch(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.PARENT_DATA)
             .then((resp) => resp.json())
             .then((data: any[]) => {
-                console.log("---------------------------");
-                console.log(data);
                 const nodes = createNodes(data);
-                console.log(nodes);
-                //var fakeServer = createFakeServer(nodes);
                 var datasource = createServerSideDatasource();
-                //console.log(fakeServer);
                 console.log(datasource);
                 params.api!.setServerSideDatasource(datasource);
             });
@@ -280,101 +274,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         // Update the document title using the browser API
     });
 
-
-
-    function updateEntityOld() {
-        console.log("Update -------------------");
-
-        var data = [];
-        data.push('--batch_123456');
-        data.push('Content-Type: multipart/mixed;boundary=changeset_BBB456');
-        data.push('');
-
-        //first request
-        data.push('--changeset_BBB456');
-        data.push('Content-Type:application/http');
-        data.push('Content-Transfer-Encoding:binary');
-        data.push('Content-ID:1');
-        data.push('');
-        //@ts-ignore
-        data.push('POST ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(0be62c2f-7eea-ec11-bb3d-000d3af2a84a) HTTP/1.1');
-        data.push('Content-Type:application/json;type=entry');
-        data.push('');
-        data.push('{ "new_apilinestatus":"account name to updated" }');
-
-
-        //second request
-        data.push('--changeset_BBB456');
-        data.push('Content-Type:application/http');
-        data.push('Content-Transfer-Encoding:binary');
-        data.push('Content-ID:2');
-        data.push('');
-        //@ts-ignore
-        data.push('POST ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(262b7247-7eea-ec11-bb3d-000d3af2a84a) HTTP/1.1');
-        data.push('Content-Type:application/json;type=entry');
-        data.push('');
-        data.push('{ "new_apilinestatus":"account name to updated" }');
-        //end of changeset
-
-        data.push('--changeset_BBB456--');
-        //end of batch
-
-        data.push('--batch_123456--');
-
-        var payload = data.join('\r\n');
-        //  var payload = data;
-        console.log(payload);
-
-        const requestOptions = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'multipart/mixed;boundary=batch_123456',
-                'Accept': 'application/json',
-                'prefer': 'odata.continue-on-error',
-                'Odata-MaxVersion': '4.0',
-                'Odata-Version': '4.0'
-            },
-            body: payload
-            // body: JSON.stringify({
-            //     "@odata.type": "Microsoft.Dynamics.CRM.contact",
-            //     "new_apilinestatus": "Updated",
-            // })
-        };
-
-        console.log(requestOptions);
-        //@ts-ignore
-        fetch(Xrm.Page.context.getClientUrl() + '/api/data/v9.0/$batch', requestOptions)
-            .then(response => response.json())
-            .then(data => { console.log(data) });
-
-
-        // $.ajax(
-        //     {
-        //         method: 'POST',
-        //         url: Xrm.Page.context.getClientUrl() + '/api/data/v8.1/$batch',
-        //         headers: {
-        //             'Content-Type': 'multipart/mixed;boundary=batch_123456',
-        //             'Accept': 'application/json',
-        //             'Odata-MaxVersion': '4.0',
-        //             'Odata-Version': '4.0'
-
-        //         },
-
-        //         data: payload,
-        //         async: false,
-        //         success: function (data, textStatus, xhr) {
-        //             alert("The record has been updated");
-
-        //         },
-        //         error: function (xhr, data, textStatus, errorThrown) {
-
-        //         }
-        //     });
-
-
-    }
-
-
     function updateEntity() {
         console.log(gridRef.current!.api.getSelectedRows());
 
@@ -391,7 +290,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         for (let i = 0; i < selRows.length; i++) {
             // update the record
             //@ts-ignore
-            Xrm.WebApi.updateRecord("new_projects", selRows[i].guid, data).then(
+            Xrm.WebApi.updateRecord(appConfig.SCHEMA.ENTITY_NAME, selRows[i].guid, data).then(
                 function success(result: any) {
                     dismissPanel();
 
@@ -489,6 +388,6 @@ function createNodes(data: any) {
             ]
         });
     }
-    console.log(dtemp);
+   
     return dtemp;
 }

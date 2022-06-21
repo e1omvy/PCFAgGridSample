@@ -3,8 +3,6 @@ import DataSetInterfaces = ComponentFramework.PropertyHelper.DataSetApi;
 type DataSet = ComponentFramework.PropertyTypes.DataSet;
 import * as React from "react";
 import * as ReactDOM from "react-dom"
-import MyReactComponent from "./components/MyReactComponent";
-import GridExample from "./components/GridExample"
 import App from "./components/App";
 import { createRoot } from 'react-dom/client'
 
@@ -43,34 +41,6 @@ export class PCFAGGRidComponent implements ComponentFramework.StandardControl<II
     public updateView(context: ComponentFramework.Context<IInputs>): void {
         // console.log(context.parameters.Projects);
 
-        let condition: any = {
-            attributeName: "new_parenttask",
-            conditionOperator: 0,
-            value: "NA",
-        };
-        let conditionsArray: any = [];
-    
-        conditionsArray.push(condition);
-        context.parameters.Projects.filtering.setFilter({
-            conditions: conditionsArray,
-            filterOperator: 0 /* or */,
-        });
-        // context.parameters.Projects.refresh();
-        let columnsOnView = context.parameters.Projects.columns;
-        let mappedcolumns = this.mapCRMColumnsToDetailsListColmns(columnsOnView);
-        let pageRows = this.getAllPageRecords(columnsOnView, context.parameters.Projects);
-        console.log("pageRow in xxxx --------------------------------- ");
-        console.log(pageRows);
-
-        let esignProp = {
-            onSelectionChange: (value: any) => {
-                this.notifyChangeEvent();
-            }
-        }
-
-        //@ts-ignore
-        //Xrm.Utility.alertDialog("ok");
-         
       
         // Add code to update control views
         ReactDOM.render(
