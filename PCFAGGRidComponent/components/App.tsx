@@ -264,13 +264,13 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }, []);
 
 
-    function onSelectionChanged(){
+    function onSelectionChanged() {
         console.log(gridRef.current!.api.getSelectedRows());
         let count = gridRef.current!.api.getSelectedRows().length;
-        if (count > 0){
+        if (count > 0) {
             setActiveUpdateButton(false);
         }
-        else{
+        else {
             setActiveUpdateButton(true);
         }
     }
@@ -388,23 +388,26 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         }
         console.log(data);
 
-        // update the record
+        for (let i = 0; i < selRows.length; i++) {
+            // update the record
+            //@ts-ignore
+            Xrm.WebApi.updateRecord("new_projects", selRows[i].guid, data).then(
+                function success(result: any) {
+                    dismissPanel();
+
+                    console.log("Project updated");
+                    // perform operations on record update
+                },
+                function (error: any) {
+                    console.log(error.message);
+                    // handle error conditions
+                }
+            );
+        }
+
         //@ts-ignore
-        Xrm.WebApi.updateRecord("new_projects", guid, data).then(
-            function success(result: any) {
-                dismissPanel();
-                //@ts-ignore
-                Xrm.Utility.confirmDialog("Record has been updated");
-                gridRef.current!.api.refreshServerSideStore();
-                //     gridRef.current!.api.redrawRows();
-                console.log("Project updated");
-                // perform operations on record update
-            },
-            function (error: any) {
-                console.log(error.message);
-                // handle error conditions
-            }
-        );
+        Xrm.Utility.confirmDialog("Record has been updated");
+        gridRef.current!.api.refreshServerSideStore();
     }
 
     return (
@@ -424,14 +427,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     rowModelType={"serverSide"}
                     serverSideStoreType={"partial"}
                     treeData={true}
-                    // rowSelection={"multiple"}
+                    rowSelection={"multiple"}
                     animateRows={true}
                     isServerSideGroupOpenByDefault={isServerSideGroupOpenByDefault}
                     isServerSideGroup={isServerSideGroup}
                     getServerSideGroupKey={getServerSideGroupKey}
                     onGridReady={onGridReady}
                     groupDefaultExpanded={-1}
-                    onSelectionChanged = {onSelectionChanged}
+                    onSelectionChanged={onSelectionChanged}
                 ></AgGridReact>
 
 
