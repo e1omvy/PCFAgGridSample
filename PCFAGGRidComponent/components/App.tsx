@@ -309,6 +309,73 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         gridRef.current!.api.refreshServerSideStore();
     }
 
+
+    function updateEntityOld() {
+        console.log("Update -------------------");
+
+
+        var data = [];
+        data.push('--batch_123456');
+        data.push('Content-Type: multipart/mixed;boundary=changeset_BBB456');
+        data.push('');
+
+        //first request
+        data.push('--changeset_BBB456');
+        data.push('Content-Type:application/http');
+        data.push('Content-Transfer-Encoding:binary');
+        data.push('Content-ID:1');
+        data.push('');
+        //@ts-ignore
+        data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(0be62c2f-7eea-ec11-bb3d-000d3af2a84a) HTTP/1.1');
+        data.push('Content-Type:application/json;type=entry');
+        data.push('');
+        data.push('{ "new_apilinestatus":"account name to updated" }');
+        //second request
+        data.push('--changeset_BBB456');
+        data.push('Content-Type:application/http');
+        data.push('Content-Transfer-Encoding:binary');
+        //var id = i + 1;
+        data.push('Content-ID:2');
+        data.push('');
+        //@ts-ignore
+        data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(262b7247-7eea-ec11-bb3d-000d3af2a84a) HTTP/1.1');
+        data.push('Content-Type:application/json;type=entry');
+        data.push('');
+        data.push('{ "new_apilinestatus":"account name to updated" }');
+        //end of changeset
+        data.push('--changeset_BBB456--');
+        //end of batch
+        data.push('--batch_123456--');
+        var payload = data.join('\r\n');
+
+
+
+
+        $.ajax(
+            {
+                method: 'POST',
+                //@ts-ignore
+                url: Xrm.Page.context.getClientUrl() + '/api/data/v9.0/$batch',
+                headers: {
+                    'Content-Type': 'multipart/mixed;boundary=batch_123456',
+                    'Accept': 'application/json',
+                    'Odata-MaxVersion': '4.0',
+                    'Odata-Version': '4.0'
+                },
+                data: payload,
+                async: false,
+                success: function (s) {
+                    console.log(s);
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+
+
+    }
+
+
     return (
 
         <div style={containerStyle}>
@@ -356,7 +423,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                             }} />
 
                         <Stack horizontal tokens={stackTokens}>
-                            <PrimaryButton onClick={updateEntity} text="Save" />
+                            <PrimaryButton onClick={updateEntityOld} text="Save" />
                             <DefaultButton onClick={dismissPanel} text="Cancel" />
                         </Stack>
                     </Stack>
@@ -388,6 +455,6 @@ function createNodes(data: any) {
             ]
         });
     }
-   
+
     return dtemp;
 }
