@@ -191,7 +191,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
     const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
 
-    const [columnDefs, setcolumnDefs] = useState<ColDef[]>([
+    const [columnDefs] = useState<ColDef[]>([
         { field: "taskid", hide: true },
         { field: "taskname", hide: true, checkboxSelection: true, },
         { field: "guid", hide: true },
@@ -206,6 +206,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             width: 240,
             filter: "agTextColumnFilter",
             flex: 1,
+            editable: true,
             sortable: true,
             resizable: true,
         };
@@ -225,7 +226,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         };
     }, []);
     const isServerSideGroupOpenByDefault = useCallback(
-
         (params: IsServerSideGroupOpenByDefaultParams) => {
             // open first two levels by default
             console.log("isServerSideGroupOpenByDefault");
@@ -259,6 +259,15 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }, []);
 
 
+    function onCellEditingStopped(event: any) {
+        const oldVal = event.oldValue;
+        const newVal = event.newValue;
+        const colName = "crfb2_" + event.colDef.field; //crfb2_percentagecomplete
+        const guid = event.data.guid;
+        if (oldVal == newVal) return;
+        updateSingleEntity(guid, newVal, colName)
+    }
+
     function onSelectionChanged() {
         console.log(gridRef.current!.api.getSelectedRows());
         let count = gridRef.current!.api.getSelectedRows().length;
@@ -275,6 +284,28 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         // Update the document title using the browser API
     });
 
+
+    function updateSingleEntity(guid: any, newVal: any, column: string) {
+        var data = {
+             [column]: newVal
+        }
+
+        // update the record
+        //@ts-ignore
+        Xrm.WebApi.updateRecord(appConfig.SCHEMA.ENTITY_NAME_FOR_UPDATE, guid, data).then(
+            function success(result: any) {
+                //@ts-ignore
+                Xrm.Navigation.openAlertDialog("Record has been updated");
+                //Xrm.Utility.confirmDialog("Record has been updated");
+                gridRef.current!.api.refreshServerSideStore();
+            },
+            function (error: any) {
+                console.log(error);
+                //@ts-ignore
+                Xrm.Navigation.openAlertDialog("Something went wrong. Please try again.");
+            }
+        );
+    }
 
 
     function updateEntity() {
@@ -297,7 +328,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             data.push('Content-ID:' + (i + 1));
             data.push('');
             //@ts-ignore
-            data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/' + appConfig.SCHEMA.ENTITY_NAME_FOR_UPDATE + '(' + selRows[i].guid + ') HTTP/1.1');
+            data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/' + appConfig.SCHEMA.ENTITY_NAME_FOR_BATCH_UPDATE + '(' + selRows[i].guid + ') HTTP/1.1');
             data.push('Content-Type:application/json;type=entry');
             data.push('');
             data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '" }');
@@ -337,8 +368,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     Xrm.Navigation.openAlertDialog("Something went wrong. Please try again.");
                 }
             });
-
-
     }
 
 
@@ -367,6 +396,8 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     onGridReady={onGridReady}
                     groupDefaultExpanded={-1}
                     onSelectionChanged={onSelectionChanged}
+                    enableGroupEdit={true}
+                    onCellEditingStopped={onCellEditingStopped}
                 ></AgGridReact>
 
 

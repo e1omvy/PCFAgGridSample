@@ -7,7 +7,8 @@ export const appConfig = {
     },
 
     SCHEMA: {
-        ENTITY_NAME_FOR_UPDATE: "crfb2_projects"
+        ENTITY_NAME_FOR_UPDATE: "crfb2_project",
+        ENTITY_NAME_FOR_BATCH_UPDATE: "crfb2_projects"
     }
 
 }
