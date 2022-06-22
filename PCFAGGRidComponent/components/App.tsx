@@ -310,46 +310,38 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }
 
 
+
     function updateEntityOld() {
         console.log("Update -------------------");
 
+        var selRows = gridRef.current!.api.getSelectedRows();
+
+        var uniqueID =   (new Date()).getTime();
 
         var data = [];
-        data.push('--batch_123456');
-        data.push('Content-Type: multipart/mixed;boundary=changeset_BBB456');
+        data.push('--batch_' + uniqueID);
+        data.push('Content-Type: multipart/mixed;boundary=changeset_' + uniqueID);
         data.push('');
 
-        //first request
-        data.push('--changeset_BBB456');
-        data.push('Content-Type:application/http');
-        data.push('Content-Transfer-Encoding:binary');
-        data.push('Content-ID:1');
-        data.push('');
-        //@ts-ignore
-        data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(0be62c2f-7eea-ec11-bb3d-000d3af2a84a) HTTP/1.1');
-        data.push('Content-Type:application/json;type=entry');
-        data.push('');
-        data.push('{ "new_apilinestatus":"account name to updated" }');
-        //second request
-        data.push('--changeset_BBB456');
-        data.push('Content-Type:application/http');
-        data.push('Content-Transfer-Encoding:binary');
-        //var id = i + 1;
-        data.push('Content-ID:2');
-        data.push('');
-        //@ts-ignore
-        data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(262b7247-7eea-ec11-bb3d-000d3af2a84a) HTTP/1.1');
-        data.push('Content-Type:application/json;type=entry');
-        data.push('');
-        data.push('{ "new_apilinestatus":"account name to updated" }');
-        //end of changeset
-        data.push('--changeset_BBB456--');
+        for (let i = 0; i < selRows.length; i++) {
+            //first request
+            data.push('--changeset_' + uniqueID);
+            data.push('Content-Type:application/http');
+            data.push('Content-Transfer-Encoding:binary');
+            data.push('Content-ID:' + (i + 1));
+            data.push('');
+            //@ts-ignore
+            data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(' + selRows[i].guid + ') HTTP/1.1');
+            data.push('Content-Type:application/json;type=entry');
+            data.push('');
+            data.push('{ "new_apilinestatus":"' + aplineStatus + '" }');
+        }
+
+
+        data.push('--changeset_' + uniqueID + '--');
         //end of batch
-        data.push('--batch_123456--');
+        data.push('--batch_' + uniqueID + '--');
         var payload = data.join('\r\n');
-
-
-
 
         $.ajax(
             {
@@ -357,7 +349,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 //@ts-ignore
                 url: Xrm.Page.context.getClientUrl() + '/api/data/v9.0/$batch',
                 headers: {
-                    'Content-Type': 'multipart/mixed;boundary=batch_123456',
+                    'Content-Type': 'multipart/mixed;boundary=batch_' + uniqueID,
                     'Accept': 'application/json',
                     'Odata-MaxVersion': '4.0',
                     'Odata-Version': '4.0'
@@ -366,6 +358,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 async: false,
                 success: function (s) {
                     console.log(s);
+                    dismissPanel();
+                    //@ts-ignore
+                    Xrm.Utility.confirmDialog("Record has been updated");
+                    gridRef.current!.api.refreshServerSideStore();
                 },
                 error: function (e) {
                     console.log(e);
