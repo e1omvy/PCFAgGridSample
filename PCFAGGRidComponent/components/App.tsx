@@ -51,9 +51,10 @@ function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
                 taskid: d.taskid,
                 guid: d.guid,
                 taskname: d.taskname,
-                apilinestatus: d.apilinestatus,
+                aplinestatus: d.aplinestatus,
                 startdate: d.startdate,
                 enddate: d.enddate,
+                percentagecomplete: d.percentagecomplete
             };
         });
         //}
@@ -194,10 +195,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "taskid", hide: true },
         { field: "taskname", hide: true, checkboxSelection: true, },
         { field: "guid", hide: true },
-        { field: "apilinestatus", headerName: 'AP Line Status' },
-        { field: "startdate" },
-        { field: "enddate" },
-        { field: "percentagecomplete" },
+        { field: "aplinestatus", headerName: 'AP Line Status', editable: true },
+        { field: "startdate", headerName: 'Start Date' },
+        { field: "enddate", headerName: 'End Date' },
+        { field: "percentagecomplete", headerName: '% Complete', editable: true },
     ]);
 
     const defaultColDef = useMemo<ColDef>(() => {
@@ -274,49 +275,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         // Update the document title using the browser API
     });
 
+
+
     function updateEntity() {
-        console.log(gridRef.current!.api.getSelectedRows());
-
-        var selRows = gridRef.current!.api.getSelectedRows();
-
-        var guid = selRows[0].guid;
-
-        var data =
-        {
-            "new_apilinestatus": aplineStatus,
-        }
-        console.log(data);
-
-        for (let i = 0; i < selRows.length; i++) {
-            // update the record
-            //@ts-ignore
-            Xrm.WebApi.updateRecord(appConfig.SCHEMA.ENTITY_NAME, selRows[i].guid, data).then(
-                function success(result: any) {
-                    dismissPanel();
-
-                    console.log("Project updated");
-                    // perform operations on record update
-                },
-                function (error: any) {
-                    console.log(error.message);
-                    // handle error conditions
-                }
-            );
-        }
-
-        //@ts-ignore
-        Xrm.Utility.confirmDialog("Record has been updated");
-        gridRef.current!.api.refreshServerSideStore();
-    }
-
-
-
-    function updateEntityOld() {
         console.log("Update -------------------");
 
         var selRows = gridRef.current!.api.getSelectedRows();
 
-        var uniqueID =   (new Date()).getTime();
+        var uniqueID = (new Date()).getTime();
 
         var data = [];
         data.push('--batch_' + uniqueID);
@@ -331,10 +297,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             data.push('Content-ID:' + (i + 1));
             data.push('');
             //@ts-ignore
-            data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/new_projectses(' + selRows[i].guid + ') HTTP/1.1');
+            data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/' + appConfig.SCHEMA.ENTITY_NAME_FOR_UPDATE + '(' + selRows[i].guid + ') HTTP/1.1');
             data.push('Content-Type:application/json;type=entry');
             data.push('');
-            data.push('{ "new_apilinestatus":"' + aplineStatus + '" }');
+            data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '" }');
         }
 
 
@@ -360,11 +326,15 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     console.log(s);
                     dismissPanel();
                     //@ts-ignore
-                    Xrm.Utility.confirmDialog("Record has been updated");
+                    Xrm.Navigation.openAlertDialog("Record has been updated");
+                    //Xrm.Utility.confirmDialog("Record has been updated");
                     gridRef.current!.api.refreshServerSideStore();
                 },
                 error: function (e) {
                     console.log(e);
+                    dismissPanel();
+                    //@ts-ignore
+                    Xrm.Navigation.openAlertDialog("Something went wrong. Please try again.");
                 }
             });
 
@@ -413,13 +383,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     <Stack {...columnProps}>
                         <TextField label="AP Line Status" required
                             onChange={(e) => {
-                                console.log(e);
                                 const v: any = e.target;
                                 setAplineStatus(v.value)
                             }} />
 
                         <Stack horizontal tokens={stackTokens}>
-                            <PrimaryButton onClick={updateEntityOld} text="Save" />
+                            <PrimaryButton onClick={updateEntity} text="Save" />
                             <DefaultButton onClick={dismissPanel} text="Cancel" />
                         </Stack>
                     </Stack>
@@ -440,13 +409,13 @@ function createNodes(data: any) {
     let d = data.value;
     for (let i = 0; i < d.length; i++) {
         dtemp.push({
-            "taskname": d[i].new_taskname,
-            "taskid": d[i].new_taskid,
-            "guid": d[i].new_projectsid,
-            "apilinestatus": d[i].new_apilinestatus,
-            "startdate": d[i].new_startdate,
-            "enddate": d[i].new_enddate,
-            "percentagecomplete": d[i].new_percentagecomplete,
+            "taskname": d[i].crfb2_taskname,
+            "taskid": d[i].crfb2_taskid,
+            "guid": d[i].crfb2_projectid,
+            "aplinestatus": d[i].crfb2_aplinestatus,
+            "startdate": d[i].crfb2_startdate,
+            "enddate": d[i].crfb2_enddate,
+            "percentagecomplete": d[i].crfb2_percentagecomplete,
             "children": [
             ]
         });

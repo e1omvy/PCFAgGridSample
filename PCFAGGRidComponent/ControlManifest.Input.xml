@@ -20,7 +20,7 @@
     <!-- dataset node represents a set of entity records on CDS; allow more than one datasets -->
     <data-set name="Projects" display-name-key="Dataset_Display_Key">
        <property-set name="Task Name" display-name-key="Property_Task_Name_Display_Key" description-key="Property_Task_Name_Desc_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
-       <property-set name="APILineStatus" display-name-key="Property_APILineStatus_Display_Key" description-key="Property_APILineStatus_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
+       <property-set name="APLineStatus" display-name-key="Property_APLineStatus_Display_Key" description-key="Property_APLineStatus_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
        <property-set name="Start Date" display-name-key="Property_StartDate_Display_Key" description-key="Property_StartDate_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
        <property-set name="End Date" display-name-key="Property_EndDate_Display_Key" description-key="Property_EndDate_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
        <property-set name="Percentage Complete" display-name-key="Property_Percentage_Complete_Display_Key" description-key="Property_Percentage_Complete_Display_Key" of-type="SingleLine.Text" usage="bound" required="false" /> 
