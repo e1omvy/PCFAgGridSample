@@ -20,13 +20,15 @@ import { RowGroupingModule } from "@ag-grid-enterprise/row-grouping";
 import { MenuModule } from "@ag-grid-enterprise/menu";
 import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
 
+import Moment from 'react-moment';
+import * as moment from "moment";
 
 
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 
 import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
-import { IStackProps, IStackStyles, Stack, StackItem, TextField } from "office-ui-fabric-react";
+import { DatePicker, IStackProps, IStackStyles, Stack, StackItem, TextField } from "office-ui-fabric-react";
 import { appConfig } from "./constants";
 
 
@@ -185,6 +187,8 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
 
     const [aplineStatus, setAplineStatus] = useState('');
+    const [startdate, setStartDate] = useState(new Date());
+    const [enddate, setEndDate] = useState(new Date());
     const [activeUpdateButton, setActiveUpdateButton] = useState(true);
 
     const gridRef = React.useRef<AgGridReact>(null);
@@ -287,7 +291,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     function updateSingleEntity(guid: any, newVal: any, column: string) {
         var data = {
-             [column]: newVal
+            [column]: newVal
         }
 
         // update the record
@@ -331,7 +335,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/' + appConfig.SCHEMA.ENTITY_NAME_FOR_BATCH_UPDATE + '(' + selRows[i].guid + ') HTTP/1.1');
             data.push('Content-Type:application/json;type=entry');
             data.push('');
-            data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '" }');
+            data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '", "crfb2_startdate":"' + moment(startdate).format('MM/DD/YYYY') + '", "crfb2_enddate":"' + moment(enddate).format('MM/DD/YYYY') + '" }');
         }
 
 
@@ -418,6 +422,21 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                                 setAplineStatus(v.value)
                             }} />
 
+                        <DatePicker
+                            label="Start Date"
+                            placeholder="Select a date..."
+                            ariaLabel="Select a date"
+                            onSelectDate={(date: any) => setStartDate(date)}
+                            value={startdate}
+                        />
+                        <DatePicker
+                            label="End Date"
+                            placeholder="Select a date..."
+                            ariaLabel="Select a date"
+                            onSelectDate={(date: any) => setEndDate(date)}
+                            value={enddate}
+                        />
+
                         <Stack horizontal tokens={stackTokens}>
                             <PrimaryButton onClick={updateEntity} text="Save" />
                             <DefaultButton onClick={dismissPanel} text="Cancel" />
@@ -444,8 +463,8 @@ function createNodes(data: any) {
             "taskid": d[i].crfb2_taskid,
             "guid": d[i].crfb2_projectid,
             "aplinestatus": d[i].crfb2_aplinestatus,
-            "startdate": d[i].crfb2_startdate,
-            "enddate": d[i].crfb2_enddate,
+            "startdate": moment(d[i].crfb2_startdate).format("YYYY-MM-DD") != 'Invalid date' ? moment(d[i].crfb2_startdate).format("YYYY-MM-DD") : '',
+            "enddate": moment(d[i].crfb2_enddate).format("YYYY-MM-DD") != 'Invalid date' ? moment(d[i].crfb2_enddate).format("YYYY-MM-DD") : '',
             "percentagecomplete": d[i].crfb2_percentagecomplete,
             "children": [
             ]
