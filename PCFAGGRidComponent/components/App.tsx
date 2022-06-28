@@ -285,8 +285,23 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
 
     useEffect(() => {
-        // Update the document title using the browser API
-    });
+        getAPLineLookup();
+    }, []);
+
+    function getAPLineLookup() {
+        //@ts-ignore
+        fetch(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.APLINE_LOOKUP
+        ).then((resp) => resp.json())
+            .then((data: any) => {
+                var arr: any[] = data["OptionSet"]["Options"];
+                // optionsAPLineStatus.length = 0;
+                // for (let i = 0; i < arr.length; i++) {
+                //     var tempValue = arr[i].value;
+                //     var tempText = arr[i]["Label"]["UserLocalizedLabel"]["Label"];
+                //     optionsAPLineStatus.push({ key: tempValue, text: tempText });
+                // }
+            });
+    }
 
 
     function updateSingleEntity(guid: any, newVal: any, column: string) {
