@@ -189,6 +189,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     const [aplineStatus, setAplineStatus] = useState('');
     const [optionsAPLineStatus, setOptionsAPLineStatus] = useState([{ value: "", label: "" }]);
+    const [optionsAPLineStatusLabelOnly, setOptionsAPLineStatusLabelOnly] = useState<string[]>([]);
     const [startdate, setStartDate] = useState(new Date());
     const [enddate, setEndDate] = useState(new Date());
     const [activeUpdateButton, setActiveUpdateButton] = useState(true);
@@ -201,7 +202,36 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "taskid", hide: true },
         { field: "taskname", hide: true, checkboxSelection: true, },
         { field: "guid", hide: true },
-        { field: "aplinestatus", headerName: 'AP Line Status', editable: true },
+        {
+            field: "aplinestatus", headerName: 'AP Line Status', editable: true,
+
+            cellEditor: 'select',
+            cellRenderer: function (data: any) {
+                //var color = colors.find(color => color.id == data.value || color.name == data.value);
+                var apstatus = optionsAPLineStatus.find(s => s.value == data.value);
+                // here I've added the check for 'color.id' and 'color.name' because initailly from DB will com the id and afterwards form selectparams will come the name
+                console.log(data);
+                return apstatus?.label;
+            },
+            onCellValueChanged: function (data: any) {
+                /**
+                 * because 'select' does not offer us the possibility to use 'key-value' as traditional,
+                 * we will use only values in 'select' and changed to 'id' when will be saved.
+                 */
+                console.log(data);
+                var apVal = data.data.aplinestatus;
+                var guid = data.data.guid;
+                var newVal = optionsAPLineStatus.find(x => x.label == apVal)?.value;
+                
+                updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
+            },
+            cellEditorParams: {
+                //values: optionsAPLineStatus.map( x => x.label)
+                values : optionsAPLineStatusLabelOnly
+            }
+
+
+        },
         { field: "startdate", headerName: 'Start Date' },
         { field: "enddate", headerName: 'End Date' },
         { field: "percentagecomplete", headerName: '% Complete', editable: true },
@@ -271,7 +301,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         const colName = "crfb2_" + event.colDef.field; //crfb2_percentagecomplete
         const guid = event.data.guid;
         if (oldVal == newVal) return;
-        updateSingleEntity(guid, newVal, colName)
+       // updateSingleEntity(guid, newVal, colName)
     }
 
     function onSelectionChanged() {
@@ -297,10 +327,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             .then((data: any) => {
                 var arr: any[] = data["OptionSet"]["Options"];
                 optionsAPLineStatus.length = 0;
+                optionsAPLineStatusLabelOnly.length = 0;
                 for (let i = 0; i < arr.length; i++) {
                     var tempValue = arr[i].Value;
                     var tempText = arr[i]["Label"]["UserLocalizedLabel"]["Label"];
                     optionsAPLineStatus.push({ value: tempValue, label: tempText });
+                    optionsAPLineStatusLabelOnly.push(tempText);
                 }
             });
     }
