@@ -223,7 +223,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 var guid = data.data.guid;
                 var oldVal = data.oldValue;
                 var newVal = optionsAPLineStatus.find(x => x.label == apVal)?.value;
-                if(oldVal == newVal) return;
+               // if(oldVal == newVal) return;
                  
                 updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
             },
