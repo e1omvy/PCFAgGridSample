@@ -221,8 +221,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 console.log(data);
                 var apVal = data.data.aplinestatus;
                 var guid = data.data.guid;
+                var oldVal = data.data.oldValue;
                 var newVal = optionsAPLineStatus.find(x => x.label == apVal)?.value;
-                
+                if(oldVal == newVal) return;
+                 
                 updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
             },
             cellEditorParams: {
@@ -301,7 +303,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         const colName = "crfb2_" + event.colDef.field; //crfb2_percentagecomplete
         const guid = event.data.guid;
         if (oldVal == newVal) return;
-       // updateSingleEntity(guid, newVal, colName)
+
+        if(colName ==  "crfb2_aplinestatus") return;
+
+        updateSingleEntity(guid, newVal, colName)
     }
 
     function onSelectionChanged() {
