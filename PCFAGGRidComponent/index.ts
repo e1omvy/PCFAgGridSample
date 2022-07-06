@@ -4,7 +4,7 @@ type DataSet = ComponentFramework.PropertyTypes.DataSet;
 import * as React from "react";
 import * as ReactDOM from "react-dom"
 import App from "./components/App";
-import { createRoot } from 'react-dom/client'
+ 
 
 export class PCFAGGRidComponent implements ComponentFramework.StandardControl<IInputs, IOutputs> {
 
