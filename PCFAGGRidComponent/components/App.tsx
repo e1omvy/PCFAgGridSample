@@ -221,7 +221,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 console.log(data);
                 var apVal = data.data.aplinestatus;
                 var guid = data.data.guid;
-                var oldVal = data.data.oldValue;
+                var oldVal = data.oldValue;
                 var newVal = optionsAPLineStatus.find(x => x.label == apVal)?.value;
                 if(oldVal == newVal) return;
                  
