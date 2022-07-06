@@ -23,12 +23,13 @@ import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
 import Moment from 'react-moment';
 import * as moment from "moment";
 
+import Select from 'react-select';
 
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 
 import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
-import { DatePicker, IStackProps, IStackStyles, Stack, StackItem, TextField } from "office-ui-fabric-react";
+import { DatePicker, IStackProps, IStackStyles, Label, Stack, StackItem, TextField } from "office-ui-fabric-react";
 import { appConfig } from "./constants";
 
 
@@ -187,6 +188,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
 
     const [aplineStatus, setAplineStatus] = useState('');
+    const [optionsAPLineStatus, setOptionsAPLineStatus] = useState([{ value: "", label: "" }]);
     const [startdate, setStartDate] = useState(new Date());
     const [enddate, setEndDate] = useState(new Date());
     const [activeUpdateButton, setActiveUpdateButton] = useState(true);
@@ -294,12 +296,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         ).then((resp) => resp.json())
             .then((data: any) => {
                 var arr: any[] = data["OptionSet"]["Options"];
-                // optionsAPLineStatus.length = 0;
-                // for (let i = 0; i < arr.length; i++) {
-                //     var tempValue = arr[i].value;
-                //     var tempText = arr[i]["Label"]["UserLocalizedLabel"]["Label"];
-                //     optionsAPLineStatus.push({ key: tempValue, text: tempText });
-                // }
+                optionsAPLineStatus.length = 0;
+                for (let i = 0; i < arr.length; i++) {
+                    var tempValue = arr[i].Value;
+                    var tempText = arr[i]["Label"]["UserLocalizedLabel"]["Label"];
+                    optionsAPLineStatus.push({ value: tempValue, label: tempText });
+                }
             });
     }
 
@@ -390,6 +392,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }
 
 
+
     return (
 
         <div style={containerStyle}>
@@ -431,12 +434,20 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             >
                 <Stack horizontal tokens={stackTokens} styles={stackStyles}>
                     <Stack {...columnProps}>
-                        <TextField label="AP Line Status" required
+                        {/* <TextField label="AP Line Status" required
                             onChange={(e) => {
                                 const v: any = e.target;
                                 setAplineStatus(v.value)
-                            }} />
+                            }} /> */}
 
+                        <Label>AP Line Status</Label>
+                        <Select options={optionsAPLineStatus} className='react-select-container'
+                            onChange={val => {
+                                const v: any = val?.value;
+                                console.log(val);
+                                setAplineStatus(v)
+                            }}
+                        />
                         <DatePicker
                             label="Start Date"
                             placeholder="Select a date..."
