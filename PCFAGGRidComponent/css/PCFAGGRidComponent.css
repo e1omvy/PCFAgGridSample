@@ -1,6 +1,18 @@
-.react-select-container{
-    margin-top: 0!important;
+.react-select-container {
+    margin-top: 0 !important;
     padding-top: 0;
 }
 
- 
+.react-select-container-filter {
+    width: 200px;
+}
+
+.left-div {
+    float: left;
+    margin-left: 50px;
+    padding-top: 30px;
+}
+.right-div {
+    float: right;
+    margin-right: 50px;
+}

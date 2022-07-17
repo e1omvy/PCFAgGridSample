@@ -12,7 +12,8 @@ import {
     IServerSideDatasource,
     IServerSideGetRowsParams,
     IServerSideGetRowsRequest,
-    IsServerSideGroupOpenByDefaultParams
+    IsServerSideGroupOpenByDefaultParams,
+    RowNode
 } from "@ag-grid-community/core";
 import { ModuleRegistry } from "@ag-grid-community/core";
 import { ServerSideRowModelModule } from "@ag-grid-enterprise/server-side-row-model";
@@ -31,6 +32,7 @@ import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
 import { DatePicker, IStackProps, IStackStyles, Label, Stack, StackItem, TextField } from "office-ui-fabric-react";
 import { appConfig } from "./constants";
+
 
 
 // Register the required feature modules with the Grid
@@ -188,6 +190,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
 
     const [aplineStatus, setAplineStatus] = useState('');
+    const [aplineStatusFilter, setAplineStatusFilter] = useState('');
     const [optionsAPLineStatus, setOptionsAPLineStatus] = useState([{ value: "", label: "" }]);
     const [optionsAPLineStatusLabelOnly, setOptionsAPLineStatusLabelOnly] = useState<string[]>([]);
     const [startdate, setStartDate] = useState(new Date());
@@ -223,13 +226,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 var guid = data.data.guid;
                 var oldVal = data.oldValue;
                 var newVal = optionsAPLineStatus.find(x => x.label == apVal)?.value;
-               // if(oldVal == newVal) return;
-                 
+                // if(oldVal == newVal) return;
+
                 updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
             },
+
             cellEditorParams: {
                 //values: optionsAPLineStatus.map( x => x.label)
-                values : optionsAPLineStatusLabelOnly
+                values: optionsAPLineStatusLabelOnly
             }
 
 
@@ -296,6 +300,28 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             });
     }, []);
 
+    // function isExternalFilterPresent(): boolean {
+    //     // if ageType is not everyone, then we are filtering
+    //     return ageType !== 'everyone';
+    // }
+
+    // function doesExternalFilterPass(node: RowNode<IOlympicData>): boolean {
+    //     if (node.data) {
+    //         switch (ageType) {
+    //             case 'below25':
+    //                 return node.data.age < 25;
+    //             case 'between25and50':
+    //                 return node.data.age >= 25 && node.data.age <= 50;
+    //             case 'above50':
+    //                 return node.data.age > 50;
+    //             case 'dateAfter2008':
+    //                 return asDate(node.data.date) > new Date(2008, 1, 1);
+    //             default:
+    //                 return true;
+    //         }
+    //     }
+    //     return true;
+    // }
 
     function onCellEditingStopped(event: any) {
         const oldVal = event.oldValue;
@@ -304,7 +330,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         const guid = event.data.guid;
         if (oldVal == newVal) return;
 
-        if(colName ==  "crfb2_aplinestatus") return;
+        if (colName == "crfb2_aplinestatus") return;
 
         updateSingleEntity(guid, newVal, colName)
     }
@@ -434,12 +460,29 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
         <div style={containerStyle}>
 
-            <DefaultButton secondaryText="" onClick={openPanel} text="Update Record(s)" disabled={activeUpdateButton} />
+
+            <div className="left-div">
+                <DefaultButton secondaryText="" onClick={openPanel} text="Update Record(s)" disabled={activeUpdateButton} />
+            </div>
+            <div className="right-div">
+                <Label>AP Line Status</Label>
+                <Select options={optionsAPLineStatus} className='react-select-container-filter'
+                    onChange={val => {
+                        const v: any = val?.value;
+                        // console.log(val);
+                        setAplineStatusFilter(v)
+                    }}
+                />
+            </div>
+
+
+            <br /> <br />
 
             <br /> <br />
             <div style={gridStyle} className="ag-theme-alpine-dark">
 
                 <AgGridReact
+
                     ref={gridRef}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
@@ -457,6 +500,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     onSelectionChanged={onSelectionChanged}
                     enableGroupEdit={true}
                     onCellEditingStopped={onCellEditingStopped}
+                    enableRangeSelection={true}
+                    enableFillHandle={true}
+
+                    fillHandleDirection={'y'}
+                //  suppressMultiRangeSelection={true}
+
+                // isExternalFilterPresent={isExternalFilterPresent}
+                // doesExternalFilterPass={doesExternalFilterPass}
                 ></AgGridReact>
 
 
