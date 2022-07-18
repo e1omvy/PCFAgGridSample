@@ -13,13 +13,20 @@ import {
     IServerSideGetRowsParams,
     IServerSideGetRowsRequest,
     IsServerSideGroupOpenByDefaultParams,
+    ProcessCellForExportParams,
+    ProcessDataFromClipboardParams,
+    RangeSelectionChangedEvent,
     RowNode
 } from "@ag-grid-community/core";
 import { ModuleRegistry } from "@ag-grid-community/core";
 import { ServerSideRowModelModule } from "@ag-grid-enterprise/server-side-row-model";
+import { RangeSelectionModule } from '@ag-grid-enterprise/range-selection'
+import { ClipboardModule } from '@ag-grid-enterprise/clipboard'
+
 import { RowGroupingModule } from "@ag-grid-enterprise/row-grouping";
 import { MenuModule } from "@ag-grid-enterprise/menu";
 import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
+
 
 import Moment from 'react-moment';
 import * as moment from "moment";
@@ -40,7 +47,9 @@ ModuleRegistry.registerModules([
     ServerSideRowModelModule,
     RowGroupingModule,
     MenuModule,
-    ColumnsToolPanelModule
+    ColumnsToolPanelModule,
+    RangeSelectionModule,
+    ClipboardModule
 ]);
 
 function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
@@ -196,6 +205,11 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const [startdate, setStartDate] = useState(new Date());
     const [enddate, setEndDate] = useState(new Date());
     const [activeUpdateButton, setActiveUpdateButton] = useState(true);
+    const [activeFillUpdateButton, setActiveFillUpdateButton] = useState(true);
+
+    const [fillOperationArray, setfillOperationArray] = useState([{ guid: 0, column: '', value: '' }]);
+
+    const [arr, setArr] = useState(["foo"]);
 
     const gridRef = React.useRef<AgGridReact>(null);
     const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
@@ -206,7 +220,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "taskname", hide: true, checkboxSelection: true, },
         { field: "guid", hide: true },
         {
-            field: "aplinestatus", headerName: 'AP Line Status', editable: true,
+            field: "aplinestatus", headerName: 'AP Line Status', editable: true, suppressFillHandle: true,
 
             cellEditor: 'select',
             cellRenderer: function (data: any) {
@@ -334,6 +348,19 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
         updateSingleEntity(guid, newVal, colName)
     }
+    function onRangeSelectionChanged(event: RangeSelectionChangedEvent) {
+        console.log(event);
+        var lbRangeCount = document.querySelector('#lbRangeCount')!;
+        var lbEagerSum = document.querySelector('#lbEagerSum')!;
+        var lbLazySum = document.querySelector('#lbLazySum')!;
+        var cellRanges = event.api!.getCellRanges();
+        if (event.finished && fillOperationArray.length >= 1) {
+            setActiveFillUpdateButton(false);
+        }
+        else {
+            setActiveFillUpdateButton(true);
+        }
+    }
 
     function onSelectionChanged() {
         console.log(gridRef.current!.api.getSelectedRows());
@@ -346,6 +373,58 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         }
     }
 
+    function fillOperation(params: any) {
+        console.log(params);
+        console.log(params.column.getColId());
+
+        if (params.currentIndex == 0) {
+            // setfillOperationArray([]);
+            fillOperationArray.length = 0;
+        }
+
+        if (params.column.getColId() === 'aplinestatus') {
+            return params.currentCellValue;
+        }
+
+        if (params.column.getColId() === 'startdate') {
+            fillOperationArray.push({
+                guid: params.rowNode.data.guid,
+                column: 'startdate',
+                value: params.values[params.values.length - 1]
+            });
+            //console.log(fillOperationArray);
+            return params.values[params.values.length - 1];
+        }
+        if (params.column.getColId() === 'enddate') {
+            fillOperationArray.push({
+                guid: params.rowNode.data.guid,
+                column: 'enddate',
+                value: params.values[params.values.length - 1]
+            });
+            //console.log(fillOperationArray);
+            return params.values[params.values.length - 1];
+        }
+        if (params.column.getColId() === 'percentagecomplete') {
+            fillOperationArray.push({
+                guid: params.rowNode.data.guid,
+                column: 'percentagecomplete',
+                value: params.values[params.values.length - 1]
+            });
+            // console.log(fillOperationArray);
+            return params.values[params.values.length - 1];
+        }
+
+        return params.values[params.values.length - 1];
+
+    }
+
+
+    // function processDataFromClipboard(params: ProcessDataFromClipboardParams): any {
+
+    //     console.log(params);
+
+
+    // }
 
     useEffect(() => {
         getAPLineLookup();
@@ -389,6 +468,78 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 Xrm.Navigation.openAlertDialog("Something went wrong. Please try again.");
             }
         );
+    }
+
+
+
+    function updateFillEntity(selRows: any) {
+        console.log("Update Fill -------------------");
+        console.log(selRows);
+
+        var uniqueID = (new Date()).getTime();
+
+        var data = [];
+        data.push('--batch_' + uniqueID);
+        data.push('Content-Type: multipart/mixed;boundary=changeset_' + uniqueID);
+        data.push('');
+
+        for (let i = 0; i < selRows.length; i++) {
+            //first request
+            data.push('--changeset_' + uniqueID);
+            data.push('Content-Type:application/http');
+            data.push('Content-Transfer-Encoding:binary');
+            data.push('Content-ID:' + (i + 1));
+            data.push('');
+            //@ts-ignore
+            data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/' + appConfig.SCHEMA.ENTITY_NAME_FOR_BATCH_UPDATE + '(' + selRows[i].guid + ') HTTP/1.1');
+            data.push('Content-Type:application/json;type=entry');
+            data.push('');
+            //data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '", "crfb2_startdate":"' + moment(startdate).format('MM/DD/YYYY') + '", "crfb2_enddate":"' + moment(enddate).format('MM/DD/YYYY') + '" }');
+            if (selRows[i].column == "startdate") {
+                data.push('{ "crfb2_startdate":"' + moment(selRows[i].value).format('MM/DD/YYYY') + '" }');
+            }
+            if (selRows[i].column == "enddate") {
+                data.push('{ "crfb2_enddate":"' + moment(selRows[i].value).format('MM/DD/YYYY') + '" }');
+            }
+            if (selRows[i].column == "percentagecomplete") {
+                data.push('{ "crfb2_percentagecomplete":"' + selRows[i].value + '" }');
+            }
+        }
+
+
+        data.push('--changeset_' + uniqueID + '--');
+        //end of batch
+        data.push('--batch_' + uniqueID + '--');
+        var payload = data.join('\r\n');
+
+        $.ajax(
+            {
+                method: 'POST',
+                //@ts-ignore
+                url: Xrm.Page.context.getClientUrl() + '/api/data/v9.0/$batch',
+                headers: {
+                    'Content-Type': 'multipart/mixed;boundary=batch_' + uniqueID,
+                    'Accept': 'application/json',
+                    'Odata-MaxVersion': '4.0',
+                    'Odata-Version': '4.0'
+                },
+                data: payload,
+                async: false,
+                success: function (s) {
+                    console.log(s);
+                    dismissPanel();
+                    //@ts-ignore
+                    Xrm.Navigation.openAlertDialog("Record has been updated");
+                    //Xrm.Utility.confirmDialog("Record has been updated");
+                    gridRef.current!.api.refreshServerSideStore();
+                },
+                error: function (e) {
+                    console.log(e);
+                    dismissPanel();
+                    //@ts-ignore
+                    Xrm.Navigation.openAlertDialog("Something went wrong. Please try again.");
+                }
+            });
     }
 
 
@@ -454,6 +605,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             });
     }
 
+    function FillDataUpdate() {
+        console.log(fillOperationArray);
+        if (fillOperationArray[0].guid != 0)
+            updateFillEntity(fillOperationArray);
+    }
+
 
 
     return (
@@ -462,7 +619,8 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
 
             <div className="left-div">
-                <DefaultButton secondaryText="" onClick={openPanel} text="Update Record(s)" disabled={activeUpdateButton} />
+                <DefaultButton secondaryText="" onClick={openPanel} text="Update Bulk Record(s)" disabled={activeUpdateButton} />
+                <DefaultButton className="btn-fill-update" secondaryText="" onClick={FillDataUpdate} text="Update Fill Record(s)" disabled={activeFillUpdateButton} />
             </div>
             <div className="right-div">
                 <Label>AP Line Status</Label>
@@ -502,12 +660,16 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     onCellEditingStopped={onCellEditingStopped}
                     enableRangeSelection={true}
                     enableFillHandle={true}
-
+                    onRangeSelectionChanged={onRangeSelectionChanged}
                     fillHandleDirection={'y'}
-                //  suppressMultiRangeSelection={true}
+                    allowContextMenuWithControlKey={true}
+                    //  processDataFromClipboard={processDataFromClipboard}
+                    //  suppressMultiRangeSelection={true}
 
-                // isExternalFilterPresent={isExternalFilterPresent}
-                // doesExternalFilterPass={doesExternalFilterPass}
+                    // isExternalFilterPresent={isExternalFilterPresent}
+                    // doesExternalFilterPass={doesExternalFilterPass}
+                    fillOperation={fillOperation}
+
                 ></AgGridReact>
 
 
