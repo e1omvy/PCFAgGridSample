@@ -13,6 +13,8 @@ import {
     IServerSideGetRowsParams,
     IServerSideGetRowsRequest,
     IsServerSideGroupOpenByDefaultParams,
+    PasteEndEvent,
+    PasteStartEvent,
     ProcessCellForExportParams,
     ProcessDataFromClipboardParams,
     RangeSelectionChangedEvent,
@@ -209,6 +211,8 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     const [fillOperationArray, setfillOperationArray] = useState([{ guid: 0, column: '', value: '' }]);
 
+    const [pasteOperationArray, setPasteOperationArray] = useState([{ guid: 0, column: '', value: '' }]);
+
     const [arr, setArr] = useState(["foo"]);
 
     const gridRef = React.useRef<AgGridReact>(null);
@@ -220,8 +224,9 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "taskname", hide: true, checkboxSelection: true, },
         { field: "guid", hide: true },
         {
-            field: "aplinestatus", headerName: 'AP Line Status', editable: true, suppressFillHandle: true,
-
+            field: "aplinestatus", headerName: 'AP Line Status', editable: true,
+            suppressFillHandle: true,
+            suppressPaste: true,
             cellEditor: 'select',
             cellRenderer: function (data: any) {
                 //var color = colors.find(color => color.id == data.value || color.name == data.value);
@@ -349,11 +354,11 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         updateSingleEntity(guid, newVal, colName)
     }
     function onRangeSelectionChanged(event: RangeSelectionChangedEvent) {
-        console.log(event);
-        var lbRangeCount = document.querySelector('#lbRangeCount')!;
-        var lbEagerSum = document.querySelector('#lbEagerSum')!;
-        var lbLazySum = document.querySelector('#lbLazySum')!;
-        var cellRanges = event.api!.getCellRanges();
+        // console.log(event);
+        // var lbRangeCount = document.querySelector('#lbRangeCount')!;
+        // var lbEagerSum = document.querySelector('#lbEagerSum')!;
+        // var lbLazySum = document.querySelector('#lbLazySum')!;
+        // var cellRanges = event.api!.getCellRanges();
         if (event.finished && fillOperationArray.length >= 1) {
             setActiveFillUpdateButton(false);
         }
@@ -374,11 +379,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }
 
     function fillOperation(params: any) {
-        console.log(params);
-        console.log(params.column.getColId());
+        // console.log(params);
+        // console.log(params.column.getColId());
 
         if (params.currentIndex == 0) {
-            // setfillOperationArray([]);
             fillOperationArray.length = 0;
         }
 
@@ -418,6 +422,51 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     }
 
+    function processCellFromClipboard(params: any) {
+        // console.log(params);
+        if (params.node.rowIndex == 0) {
+            pasteOperationArray.length = 0;
+        }
+
+        if (params.column.getColId() === 'aplinestatus') {
+            return params.value;
+        }
+
+        if (params.column.getColId() === 'startdate') {
+            pasteOperationArray.push({
+                guid: params.node.data.guid,
+                column: 'startdate',
+                value: params.value
+            });
+            return params.value;
+        }
+        if (params.column.getColId() === 'enddate') {
+            pasteOperationArray.push({
+                guid: params.node.data.guid,
+                column: 'enddate',
+                value: params.value
+            });
+            return params.value;
+        }
+        if (params.column.getColId() === 'percentagecomplete') {
+            pasteOperationArray.push({
+                guid: params.node.data.guid,
+                column: 'percentagecomplete',
+                value: params.value
+            });
+            return params.value;
+        }
+
+
+    }
+    function onPasteStart(params: PasteStartEvent) {
+        //console.log('Callback onPasteStart:', params);
+    }
+
+    function onPasteEnd(params: PasteEndEvent) {
+        // console.log('Callback onPasteEnd:', params);
+        updateFillEntity(pasteOperationArray);
+    }
 
     // function processDataFromClipboard(params: ProcessDataFromClipboardParams): any {
 
@@ -663,6 +712,9 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     onRangeSelectionChanged={onRangeSelectionChanged}
                     fillHandleDirection={'y'}
                     allowContextMenuWithControlKey={true}
+                    processCellFromClipboard={processCellFromClipboard}
+                    onPasteStart={onPasteStart}
+                    onPasteEnd={onPasteEnd}
                     //  processDataFromClipboard={processDataFromClipboard}
                     //  suppressMultiRangeSelection={true}
 
