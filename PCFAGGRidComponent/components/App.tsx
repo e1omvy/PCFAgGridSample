@@ -229,11 +229,15 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             suppressPaste: true,
             cellEditor: 'select',
             cellRenderer: function (data: any) {
-                //var color = colors.find(color => color.id == data.value || color.name == data.value);
+
+                if (isNaN(data.value)) // cell edit case
+                    return data.value;
+
                 var apstatus = optionsAPLineStatus.find(s => s.value == data.value);
-                // here I've added the check for 'color.id' and 'color.name' because initailly from DB will com the id and afterwards form selectparams will come the name
+
                 console.log(data);
                 return apstatus?.label;
+                //return data.value;
             },
             onCellValueChanged: function (data: any) {
                 /**
@@ -245,9 +249,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 var guid = data.data.guid;
                 var oldVal = data.oldValue;
                 var newVal = optionsAPLineStatus.find(x => x.label == apVal)?.value;
-                // if(oldVal == newVal) return;
 
-                updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
+                if (apVal?.toLocaleLowerCase() == 'completed') {
+                    //@ts-ignore
+                    Xrm.Navigation.openAlertDialog("Task Name : " + data.data.taskname + "\nStart Date : " + data.data.startdate + "\nEnd Date : " + data.data.enddate
+                    );
+                }
+
+                //updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
             },
 
             cellEditorParams: {
