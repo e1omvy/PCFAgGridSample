@@ -28,6 +28,8 @@ import { ClipboardModule } from '@ag-grid-enterprise/clipboard'
 import { RowGroupingModule } from "@ag-grid-enterprise/row-grouping";
 import { MenuModule } from "@ag-grid-enterprise/menu";
 import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
+import { FiltersToolPanelModule } from "@ag-grid-enterprise/filter-tool-panel";
+import { SetFilterModule } from "@ag-grid-enterprise/set-filter";
 
 
 import Moment from 'react-moment';
@@ -51,82 +53,12 @@ ModuleRegistry.registerModules([
     MenuModule,
     ColumnsToolPanelModule,
     RangeSelectionModule,
-    ClipboardModule
+    ClipboardModule,
+    FiltersToolPanelModule,
+    SetFilterModule
 ]);
 
-function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
 
-    const extractRowsFromData: (groupKeys: string[], data: any[]) => any = (
-        groupKeys: string[],
-        data: any[]
-    ) => {
-        // if (groupKeys.length === 0) {
-        return data.map(function (d) {
-            return {
-                group: !!d.children,
-                taskid: d.taskid,
-                guid: d.guid,
-                taskname: d.taskname,
-                aplinestatus: d.aplinestatus,
-                startdate: d.startdate,
-                enddate: d.enddate,
-                percentagecomplete: d.percentagecomplete
-            };
-        });
-        //}
-        var key = groupKeys[0];
-        for (var i = 0; i < data.length; i++) {
-            if (data[i].taskid === key) {
-                return extractRowsFromData(
-                    groupKeys.slice(1),
-                    data[i].children.slice()
-                );
-            }
-        }
-    };
-    return extractRowsFromData(request.groupKeys, data);
-}
-
-function createServerSideDatasource() {
-    console.log("createServerSideDatasource");
-
-    const dataSource: IServerSideDatasource = {
-        getRows: (params: IServerSideGetRowsParams) => {
-            console.log("ServerSideDatasource.getRows: params = ", params);
-
-            var filter = '';//params.request.groupKeys[0];
-            if (params.request.groupKeys.length == 0) {
-                filter = 'NA';
-            }
-            else {
-                filter = params.request.groupKeys[params.request.groupKeys.length - 1];
-            }
-
-            //@ts-ignore
-            fetch(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter + "'")
-                .then((resp) => resp.json())
-                .then((data: any[]) => {
-                    console.log("---------------------------");
-                    console.log(data);
-                    var allRows = getNodes(params.request, createNodes(data));
-                    //  var result = allRows;
-                    var request = params.request;
-                    var doingInfinite = request.startRow != null && request.endRow != null;
-                    var result = doingInfinite
-                        ? {
-                            rowData: allRows, //allRows.slice(request.startRow, request.endRow),
-                            rowCount: allRows.length
-                        }
-                        : { rowData: allRows };
-                    console.log("getRows: result = ", result);
-                    setTimeout(function () {
-                        params.success(result);
-                    }, 200);
-                });
-        }
-    };
-    return dataSource;
-}
 
 function getAllPageRecords(columnsOnView: DataSetInterfaces.Column[],
     gridParam: DataSet) {
@@ -227,6 +159,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             field: "aplinestatus", headerName: 'AP Line Status', editable: true,
             suppressFillHandle: true,
             suppressPaste: true,
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                values: optionsAPLineStatusLabelOnly
+            },
             cellEditor: 'select',
             cellRenderer: function (data: any) {
 
@@ -266,15 +202,16 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
 
         },
-        { field: "startdate", headerName: 'Start Date' },
-        { field: "enddate", headerName: 'End Date' },
-        { field: "percentagecomplete", headerName: '% Complete', editable: true },
+        { field: "startdate", headerName: 'Start Date', filter: 'agDateColumnFilter' },
+        { field: "enddate", headerName: 'End Date', filter: 'agDateColumnFilter' },
+        { field: "percentagecomplete", headerName: '% Complete', editable: true, filter: 'agTextColumnFilter' },
     ]);
 
     const defaultColDef = useMemo<ColDef>(() => {
         return {
             width: 240,
-            filter: "agTextColumnFilter",
+            filter: true,
+            floatingFilter: true,
             flex: 1,
             editable: true,
             sortable: true,
@@ -328,28 +265,110 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             });
     }, []);
 
-    // function isExternalFilterPresent(): boolean {
-    //     // if ageType is not everyone, then we are filtering
-    //     return ageType !== 'everyone';
-    // }
+    function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
 
-    // function doesExternalFilterPass(node: RowNode<IOlympicData>): boolean {
-    //     if (node.data) {
-    //         switch (ageType) {
-    //             case 'below25':
-    //                 return node.data.age < 25;
-    //             case 'between25and50':
-    //                 return node.data.age >= 25 && node.data.age <= 50;
-    //             case 'above50':
-    //                 return node.data.age > 50;
-    //             case 'dateAfter2008':
-    //                 return asDate(node.data.date) > new Date(2008, 1, 1);
-    //             default:
-    //                 return true;
-    //         }
-    //     }
-    //     return true;
-    // }
+        const extractRowsFromData: (groupKeys: string[], data: any[]) => any = (
+            groupKeys: string[],
+            data: any[]
+        ) => {
+            // if (groupKeys.length === 0) {
+            return data.map(function (d) {
+                return {
+                    group: !!d.children,
+                    taskid: d.taskid,
+                    guid: d.guid,
+                    taskname: d.taskname,
+                    aplinestatus: d.aplinestatus,
+                    startdate: d.startdate,
+                    enddate: d.enddate,
+                    percentagecomplete: d.percentagecomplete
+                };
+            });
+            //}
+            var key = groupKeys[0];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].taskid === key) {
+                    return extractRowsFromData(
+                        groupKeys.slice(1),
+                        data[i].children.slice()
+                    );
+                }
+            }
+        };
+        return extractRowsFromData(request.groupKeys, data);
+    }
+
+    function createServerSideDatasource() {
+        console.log("createServerSideDatasource");
+
+        const dataSource: IServerSideDatasource = {
+            getRows: (params: IServerSideGetRowsParams) => {
+                console.log("ServerSideDatasource.getRows: params = ", params);
+
+                const { startRow, endRow, filterModel } = params.request;
+                const filterKeys = Object.keys(filterModel);
+                filterKeys.forEach(f => {
+                    console.log('${f}=${filterModel[f].filter}');
+                });
+                let apfilters: any = [];
+                if (Object.keys(params.request.filterModel).length > 0)
+                    apfilters = params.request.filterModel.aplinestatus.values;
+                //Object.keys(params.request.filterModel);
+
+                let apf = ' and (';
+                for (let i = 0; i < apfilters.length; i++) {
+                    var apstatusVal = optionsAPLineStatus.find(s => s.label == apfilters[i]);
+                    if ((apfilters.length - 1) == i)
+                        apf = apf + 'crfb2_aplinestatus eq ' + apstatusVal?.value + ')';
+                    else
+                        apf = apf + 'crfb2_aplinestatus eq ' + apstatusVal?.value + ' or ';
+                }
+
+
+                var filter = '';//params.request.groupKeys[0];
+                if (params.request.groupKeys.length == 0) {
+                    filter = 'NA' + "'";
+                }
+                else {
+                    filter = params.request.groupKeys[params.request.groupKeys.length - 1];
+                    if (apfilters.length > 0) {
+                        filter = filter + "' " + apf;
+                    }
+                    else {
+                        filter = filter + "'";
+                    }
+                }
+                //console.log(apf);
+                //@ts-ignore
+                console.log(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter);
+
+                //@ts-ignore
+                fetch(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter)
+                    .then((resp) => resp.json())
+                    .then((data: any[]) => {
+                        console.log("---------------------------");
+                        console.log(data);
+                        var allRows = getNodes(params.request, createNodes(data));
+                        //  var result = allRows;
+                        var request = params.request;
+                        var doingInfinite = request.startRow != null && request.endRow != null;
+                        var result = doingInfinite
+                            ? {
+                                rowData: allRows, //allRows.slice(request.startRow, request.endRow),
+                                rowCount: allRows.length
+                            }
+                            : { rowData: allRows };
+                        console.log("getRows: result = ", result);
+                        setTimeout(function () {
+                            params.success(result);
+                        }, 200);
+                    });
+            }
+        };
+        return dataSource;
+    }
+
+
 
     function onCellEditingStopped(event: any) {
         const oldVal = event.oldValue;
