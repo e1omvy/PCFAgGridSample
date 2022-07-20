@@ -704,7 +704,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 <DefaultButton secondaryText="" onClick={openPanel} text="Update Bulk Record(s)" disabled={activeUpdateButton} />
                 <DefaultButton className="btn-fill-update" secondaryText="" onClick={FillDataUpdate} text="Update Fill Record(s)" disabled={activeFillUpdateButton} />
             </div>
-            <div className="right-div">
+            {/* <div className="right-div">
                 <Label>AP Line Status</Label>
                 <Select options={optionsAPLineStatus} className='react-select-container-filter'
                     onChange={val => {
@@ -713,7 +713,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                         setAplineStatusFilter(v)
                     }}
                 />
-            </div>
+            </div> */}
 
 
             <br /> <br />
