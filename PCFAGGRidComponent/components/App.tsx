@@ -327,7 +327,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
                 var filter = '';//params.request.groupKeys[0];
                 if (params.request.groupKeys.length == 0) {
-                    filter = 'NA' + "'";
+                    if (apfilters.length > 0) {
+                        filter = 'NA' + "' " + apf;
+                    }
+                    else {
+                        filter = 'NA' + "'";
+                    }
                 }
                 else {
                     filter = params.request.groupKeys[params.request.groupKeys.length - 1];
